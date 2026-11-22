@@ -160,6 +160,9 @@ ${input.rawContent || '(image screenshot attached)'}`;
       mode: toSdkMode(effectiveMode),
       inCloudParams: {
         model: CLOUD_MODEL,
+        generationConfig: {
+          responseMimeType: 'application/json',
+        },
       },
     });
 
@@ -270,37 +273,61 @@ ${items
   )
   .join('\n\n')}`;
 
-  const model = getGenerativeModel(ai, {
-    mode: InferenceMode.ONLY_IN_CLOUD,
-    inCloudParams: {
-      model: CLOUD_MODEL,
-    },
-  });
+  try {
+    const model = getGenerativeModel(ai, {
+      mode: InferenceMode.ONLY_IN_CLOUD,
+      inCloudParams: {
+        model: CLOUD_MODEL,
+        generationConfig: {
+          responseMimeType: 'application/json',
+        },
+      },
+    });
 
-  const result = await model.generateContent(prompt);
-  const latencyMs = Math.round(performance.now() - startedAt);
-  const text = result.response.text();
-  const parsed = safeParseJson<{
-    title?: string;
-    overview?: string;
-    steps?: string[];
-  }>(text);
+    const result = await model.generateContent(prompt);
+    const latencyMs = Math.round(performance.now() - startedAt);
+    const text = result.response.text();
+    const parsed = safeParseJson<{
+      title?: string;
+      overview?: string;
+      steps?: string[];
+    }>(text);
 
-  return {
-    id: `syn-${Date.now()}`,
-    title: parsed?.title?.trim() || `Plan from ${items.length} tucked items`,
-    overview: parsed?.overview?.trim() || text.slice(0, 260),
-    steps:
-      Array.isArray(parsed?.steps) && parsed.steps.length > 0
-        ? parsed.steps
-        : items.map((i) => i.nextAction),
-    itemIds: items.map((i) => i.id),
-    inferenceMeta: {
-      source: 'cloud',
-      model: `${CLOUD_MODEL} (Cloud Synthesis)`,
-      latencyMs,
-      modeUsed: 'only_in_cloud',
-    },
-    createdAt: Date.now(),
-  };
+    return {
+      id: `syn-${Date.now()}`,
+      title: parsed?.title?.trim() || `Plan from ${items.length} tucked items`,
+      overview: parsed?.overview?.trim() || text.slice(0, 260),
+      steps:
+        Array.isArray(parsed?.steps) && parsed.steps.length > 0
+          ? parsed.steps
+          : items.map((i) => i.nextAction),
+      itemIds: items.map((i) => i.id),
+      inferenceMeta: {
+        source: 'cloud',
+        model: `${CLOUD_MODEL} (Cloud Synthesis)`,
+        latencyMs,
+        modeUsed: 'only_in_cloud',
+      },
+      createdAt: Date.now(),
+    };
+  } catch (error) {
+    const latencyMs = Math.round(performance.now() - startedAt);
+    const message =
+      error instanceof Error ? error.message : 'Cloud synthesis failed';
+    return {
+      id: `syn-${Date.now()}`,
+      title: `Combined plan (${items.length} tucked items)`,
+      overview: `Combined ${items.length} selected items locally because Cloud Gemini returned an error: ${message}`,
+      steps: items.map((item) => `${item.title}: ${item.nextAction}`),
+      itemIds: items.map((i) => i.id),
+      inferenceMeta: {
+        source: 'local-preview',
+        model: `${CLOUD_MODEL} fallback`,
+        latencyMs,
+        modeUsed: 'only_in_cloud',
+        note: message,
+      },
+      createdAt: Date.now(),
+    };
+  }
 }
