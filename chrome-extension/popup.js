@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'tuck_extension_items';
+const TUCK_WEB_URL = 'https://tuck-hybrid-ai-2026-1d24c.web.app';
 
 const tabHostEl = document.getElementById('tab-host');
 const tabTitleEl = document.getElementById('tab-title');
@@ -6,9 +7,9 @@ const noteInputEl = document.getElementById('note-input');
 const privateToggleEl = document.getElementById('private-toggle');
 const closeTabToggleEl = document.getElementById('close-tab-toggle');
 const tuckBtnEl = document.getElementById('tuck-btn');
+const openWebBtnEl = document.getElementById('open-web-btn');
 const statusMsgEl = document.getElementById('status-msg');
 const recentListEl = document.getElementById('recent-list');
-const recentCountEl = document.getElementById('recent-count');
 
 let activeTab = null;
 
@@ -43,7 +44,6 @@ async function getPageSnippet(tabId) {
 async function loadRecent() {
   const data = await chrome.storage.local.get(STORAGE_KEY);
   const items = Array.isArray(data[STORAGE_KEY]) ? data[STORAGE_KEY] : [];
-  recentCountEl.textContent = String(items.length);
   recentListEl.innerHTML = '';
 
   for (const item of items.slice(0, 5)) {
@@ -63,6 +63,26 @@ async function loadRecent() {
     recentListEl.appendChild(li);
   }
 }
+
+openWebBtnEl.addEventListener('click', async () => {
+  const data = await chrome.storage.local.get(STORAGE_KEY);
+  const items = Array.isArray(data[STORAGE_KEY]) ? data[STORAGE_KEY] : [];
+  const latest = items[0];
+
+  if (latest) {
+    const payload = encodeURIComponent(
+      JSON.stringify({
+        title: latest.title,
+        url: latest.url,
+        rawContent: latest.rawContent,
+        isPrivate: latest.isPrivate,
+      })
+    );
+    await chrome.tabs.create({ url: `${TUCK_WEB_URL}/#tuck=${payload}` });
+  } else {
+    await chrome.tabs.create({ url: TUCK_WEB_URL });
+  }
+});
 
 async function init() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

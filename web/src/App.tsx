@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { LogIn, LogOut, Wifi, WifiOff } from 'lucide-react';
+import { Activity, LogIn, LogOut, Wifi, WifiOff } from 'lucide-react';
 import {
   auth,
   isFirebaseConfigured,
@@ -23,6 +23,10 @@ import { QuickTuckComposer } from './components/QuickTuckComposer';
 import { DailyTriageDeck } from './components/DailyTriageDeck';
 import { QuietShelf } from './components/QuietShelf';
 import { SynthesisDialog } from './components/SynthesisDialog';
+import {
+  HybridLogDialog,
+  type InferenceLogEntry,
+} from './components/HybridLogDialog';
 import type {
   HybridMode,
   SynthesisResult,
@@ -42,6 +46,8 @@ export function App() {
   const [synthesizing, setSynthesizing] = useState(false);
   const [synthesisResult, setSynthesisResult] =
     useState<SynthesisResult | null>(null);
+  const [logOpen, setLogOpen] = useState(false);
+  const [inferenceLog, setInferenceLog] = useState<InferenceLogEntry[]>([]);
 
   useEffect(() => {
     const onOnline = () => setIsOnline(true);
@@ -136,6 +142,15 @@ export function App() {
       };
 
       syncLocal((prev) => [newItem, ...prev]);
+      setInferenceLog((prev) => [
+        {
+          id: newItem.id,
+          task: `Tuck: ${newItem.title}`,
+          meta: newItem.inferenceMeta,
+          timestamp: now,
+        },
+        ...prev.slice(0, 14),
+      ]);
       await persistItem(user?.uid ?? null, newItem);
     } finally {
       setBusyTuck(false);
@@ -191,10 +206,43 @@ export function App() {
     try {
       const result = await synthesizeItemsInCloud(chosen);
       setSynthesisResult(result);
+      setInferenceLog((prev) => [
+        {
+          id: result.id,
+          task: `Cloud Synthesis (${chosen.length} items)`,
+          meta: result.inferenceMeta,
+          timestamp: Date.now(),
+        },
+        ...prev.slice(0, 14),
+      ]);
     } finally {
       setSynthesizing(false);
     }
   };
+
+  // Ingest one-click tab handoff from the Tuck Chrome Extension (#tuck=...)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.startsWith('#tuck=')) return;
+    try {
+      const decoded = JSON.parse(decodeURIComponent(hash.slice(6))) as {
+        title?: string;
+        url?: string;
+        rawContent?: string;
+        isPrivate?: boolean;
+      };
+      window.history.replaceState(null, '', window.location.pathname);
+      void handleTuck({
+        rawContent: decoded.rawContent || decoded.title || decoded.url || 'Saved tab',
+        url: decoded.url,
+        source: 'chrome-tab',
+        isPrivate: Boolean(decoded.isPrivate),
+      });
+    } catch {
+      // Ignore malformed handoff hash
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="app-shell">
@@ -267,6 +315,16 @@ export function App() {
             {isFirebaseConfigured ? 'Firebase Connected' : 'Local Preview Mode'}
           </strong>
         </span>
+        <span>·</span>
+        <button
+          type="button"
+          className="filter-pill"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
+          onClick={() => setLogOpen(true)}
+        >
+          <Activity size={12} />
+          Hybrid AI log ({inferenceLog.length})
+        </button>
       </div>
 
       <QuickTuckComposer busy={busyTuck} onTuck={handleTuck} />
@@ -294,6 +352,12 @@ export function App() {
       <SynthesisDialog
         result={synthesisResult}
         onClose={() => setSynthesisResult(null)}
+      />
+
+      <HybridLogDialog
+        open={logOpen}
+        entries={inferenceLog}
+        onClose={() => setLogOpen(false)}
       />
     </div>
   );

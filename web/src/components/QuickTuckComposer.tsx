@@ -78,7 +78,32 @@ export function QuickTuckComposer({ busy, onTuck }: QuickTuckComposerProps) {
     <form className="composer" onSubmit={handleSubmit}>
       <div className="composer-label">
         <span>Tuck a tab link, quick note, or screenshot</span>
-        <span>Summarized on-device first via Firebase AI Logic</span>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="filter-pill"
+            onClick={() => {
+              setText(
+                'Lab report receipt from Apollo Diagnostics — ₹2,150 paid Nov 18, claim under medical reimbursement before Dec 10.'
+              );
+              setIsPrivate(true);
+            }}
+          >
+            Try private receipt
+          </button>
+          <button
+            type="button"
+            className="filter-pill"
+            onClick={() => {
+              setText(
+                'https://www.japan-guide.com/e/e3900.html - Nishiki Market opens at 9:30am, try matcha warabimochi and tamagoyaki.'
+              );
+              setIsPrivate(false);
+            }}
+          >
+            Try Kyoto tab
+          </button>
+        </div>
       </div>
 
       <textarea

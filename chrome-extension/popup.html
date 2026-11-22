@@ -43,13 +43,15 @@
 
       <div id="status-msg" class="status-msg" aria-live="polite"></div>
 
-      <section class="recent">
+      <div class="recent">
         <div class="recent-head">
           <span>Recently tucked</span>
-          <span id="recent-count">0</span>
+          <button type="button" id="open-web-btn" class="link-btn">
+            Sync to Tuck Web ↗
+          </button>
         </div>
         <ul id="recent-list" class="recent-list"></ul>
-      </section>
+      </div>
     </main>
 
     <script type="module" src="popup.js"></script>
