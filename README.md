@@ -2,7 +2,7 @@
 
 Tuck is an app for Web, Chrome, Android, and iOS that deals with the open tabs, screenshots, and saved links people plan to check later and never open again.
 
-Live web app: https://tuck-hybrid-ai-2026-1d24c.web.app
+Live web app: https://tucktabs.app
 
 Built for the #BuildHybridAI 2026 Firebase Hybrid AI Hackathon.
 

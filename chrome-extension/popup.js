@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'tuck_extension_items';
-const TUCK_WEB_URL = 'https://tuck-hybrid-ai-2026-1d24c.web.app';
+const TUCK_WEB_URL = 'https://tucktabs.app';
 
 const tabHostEl = document.getElementById('tab-host');
 const tabTitleEl = document.getElementById('tab-title');
