@@ -6,7 +6,7 @@ import FirebaseAI
 final class HybridTuckService {
     // Lazily initialized after FirebaseApp.configure()
     private lazy var hybridModel = FirebaseAI.firebaseAI(backend: .googleAI()).generativeModel(
-        modelName: "gemini-3.8-flash"
+        modelName: "gemini-3.5-flash-lite"
     )
 
     var isBusy = false

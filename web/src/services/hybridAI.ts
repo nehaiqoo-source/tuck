@@ -12,7 +12,7 @@ import type {
   TuckSource,
 } from '../types';
 
-const CLOUD_MODEL = 'gemini-3.8-flash';
+const CLOUD_MODEL = 'gemini-3.5-flash-lite';
 
 function toSdkMode(mode: HybridMode): InferenceMode {
   switch (mode) {
@@ -156,15 +156,20 @@ Content:
 ${input.rawContent || '(image screenshot attached)'}`;
 
   try {
-    const model = getGenerativeModel(ai, {
-      mode: toSdkMode(effectiveMode),
-      inCloudParams: {
-        model: CLOUD_MODEL,
-        generationConfig: {
-          responseMimeType: 'application/json',
+    const model = getGenerativeModel(
+      ai,
+      {
+        mode: toSdkMode(effectiveMode),
+        inCloudParams: {
+          model: CLOUD_MODEL,
+          generationConfig: {
+            responseMimeType: 'application/json',
+            maxOutputTokens: 450,
+          },
         },
       },
-    });
+      { timeout: 25000 }
+    );
 
     const parts: Array<
       string | { inlineData: { data: string; mimeType: string } }
@@ -274,15 +279,20 @@ ${items
   .join('\n\n')}`;
 
   try {
-    const model = getGenerativeModel(ai, {
-      mode: InferenceMode.ONLY_IN_CLOUD,
-      inCloudParams: {
-        model: CLOUD_MODEL,
-        generationConfig: {
-          responseMimeType: 'application/json',
+    const model = getGenerativeModel(
+      ai,
+      {
+        mode: InferenceMode.ONLY_IN_CLOUD,
+        inCloudParams: {
+          model: CLOUD_MODEL,
+          generationConfig: {
+            responseMimeType: 'application/json',
+            maxOutputTokens: 600,
+          },
         },
       },
-    });
+      { timeout: 25000 }
+    );
 
     const result = await model.generateContent(prompt);
     const latencyMs = Math.round(performance.now() - startedAt);
