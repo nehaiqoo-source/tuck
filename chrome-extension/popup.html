@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tuck</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="head">
+        <h1 class="brand">Tuck</h1>
+        <span id="ai-pill" class="pill local">On-Device Ready</span>
+      </header>
+
+      <section class="tab-card">
+        <div class="tab-host" id="tab-host">Loading active tab...</div>
+        <div class="tab-title" id="tab-title"></div>
+      </section>
+
+      <label class="field-label" for="note-input">Optional note (why you saved it)</label>
+      <textarea
+        id="note-input"
+        class="note-input"
+        rows="2"
+        placeholder="e.g. Check ramen opening hours before Kyoto trip"
+      ></textarea>
+
+      <div class="toggles">
+        <label class="toggle">
+          <input type="checkbox" id="private-toggle" />
+          <span>Keep private on-device</span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" id="close-tab-toggle" checked />
+          <span>Close tab after tucking</span>
+        </label>
+      </div>
+
+      <button type="button" id="tuck-btn" class="btn-primary">
+        Tuck this tab
+      </button>
+
+      <div id="status-msg" class="status-msg" aria-live="polite"></div>
+
+      <section class="recent">
+        <div class="recent-head">
+          <span>Recently tucked</span>
+          <span id="recent-count">0</span>
+        </div>
+        <ul id="recent-list" class="recent-list"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
