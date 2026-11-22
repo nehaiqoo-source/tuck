@@ -16,7 +16,7 @@ import {
 import { getAI, GoogleAIBackend, type AI } from 'firebase/ai';
 import {
   initializeAppCheck,
-  ReCaptchaV3Provider,
+  ReCaptchaEnterpriseProvider,
 } from 'firebase/app-check';
 
 const firebaseConfig = {
@@ -58,7 +58,7 @@ if (isFirebaseConfigured) {
     | undefined;
   if (recaptchaSiteKey) {
     initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+      provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
       isTokenAutoRefreshEnabled: true,
     });
   }
