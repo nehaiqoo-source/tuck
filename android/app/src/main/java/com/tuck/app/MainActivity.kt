@@ -100,6 +100,8 @@ private fun TuckAndroidScreen(
     var noteText by remember(initialDraft) { mutableStateOf(initialDraft) }
     var isPrivate by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
+    var synthesizing by remember { mutableStateOf(false) }
+    var synthesisPlan by remember { mutableStateOf<String?>(null) }
     var items by remember {
         mutableStateOf(
             listOf(
@@ -117,9 +119,42 @@ private fun TuckAndroidScreen(
                         model = "Gemini Nano (Android AICore)",
                         latencyMs = 154L
                     )
+                ),
+                TuckItem(
+                    id = "and-seed-2",
+                    title = "Kyoto backstreet ramen spots",
+                    rawContent = "Menya Inoichi Hanare opens at 11am, get a ticket at 10:15am.",
+                    source = "chrome-tab",
+                    summary = "Recommended Kyoto ramen spot with a 10:15am queue ticket tip.",
+                    nextAction = "Pin Menya Inoichi Hanare on Kyoto map.",
+                    tags = listOf("travel", "kyoto"),
+                    isPrivate = false,
+                    inferenceMeta = InferenceMeta(
+                        source = "on-device",
+                        model = "Gemini Nano (Chrome)",
+                        latencyMs = 138L
+                    )
                 )
             )
         )
+    }
+
+    // Real-time Firestore sync when signed in
+    DisposableEffect(Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        val listener = if (uid != null) {
+            FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .collection("items")
+                .addSnapshotListener { snap, _ ->
+                    val remote = snap?.documents?.mapNotNull { it.toObject(TuckItem::class.java) }
+                    if (!remote.isNullOrEmpty()) {
+                        items = remote.sortedByDescending { it.createdAt }
+                    }
+                }
+        } else null
+        onDispose { listener?.remove() }
     }
 
     val currentCard = items.firstOrNull { it.status == "tucked" }
@@ -235,12 +270,53 @@ private fun TuckAndroidScreen(
             }
 
             // Daily 3-Card Triage Deck
-            Text(
-                text = "Today's forgotten saves",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = InkBlack
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Today's forgotten saves",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = InkBlack
+                )
+                if (items.size >= 2) {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                synthesizing = true
+                                synthesisPlan = try {
+                                    engine.synthesizeInCloud(items.take(4))
+                                } catch (e: Exception) {
+                                    "Connect Firebase AI Logic to run Cloud Gemini synthesis."
+                                }
+                                synthesizing = false
+                            }
+                        },
+                        enabled = !synthesizing
+                    ) {
+                        Text(
+                            if (synthesizing) "Synthesizing..." else "Connect in Cloud",
+                            color = Color(0xFF284F7E),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+
+            if (synthesisPlan != null) {
+                AlertDialog(
+                    onDismissRequest = { synthesisPlan = null },
+                    title = { Text("Cloud Gemini plan") },
+                    text = { Text(synthesisPlan.orEmpty()) },
+                    confirmButton = {
+                        TextButton(onClick = { synthesisPlan = null }) {
+                            Text("Done")
+                        }
+                    }
+                )
+            }
 
             if (currentCard == null) {
                 Surface(

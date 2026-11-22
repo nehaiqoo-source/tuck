@@ -96,4 +96,17 @@ final class HybridTuckService {
             updatedAt: nowMs
         )
     }
+
+    func synthesizeInCloud(items: [TuckItem]) async -> String {
+        let prompt = """
+        Combine these \(items.count) saved items into a concise 4-step action plan:
+        \(items.enumerated().map { "\($0.offset + 1). \($0.element.title): \($0.element.summary)" }.joined(separator: "\n"))
+        """
+        do {
+            let response = try await hybridModel.generateContent(prompt)
+            return response.text ?? "No plan generated."
+        } catch {
+            return "Enable Firebase AI Logic to synthesize multiple items in Cloud Gemini."
+        }
+    }
 }

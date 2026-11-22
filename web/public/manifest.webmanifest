@@ -1,0 +1,16 @@
+{
+  "name": "Tuck — Quiet Tab & Screenshot Rescuer",
+  "short_name": "Tuck",
+  "description": "Rescue the open tabs, screenshots, and saved links you swore you'd check later.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF8F4",
+  "theme_color": "#C25934",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

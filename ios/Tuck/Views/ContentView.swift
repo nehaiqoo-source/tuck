@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var service = HybridTuckService()
     @State private var draftText = ""
     @State private var isPrivate = false
+    @State private var synthesisPlan: String?
     @State private var items: [TuckItem] = [
         TuckItem(
             id: "ios-seed-1",
@@ -83,8 +84,36 @@ struct ContentView: View {
                     .background(.white, in: RoundedRectangle(cornerRadius: 18))
 
                     // Daily Triage Deck
-                    Text("Today's forgotten saves")
-                        .font(.system(size: 22, weight: .regular, design: .serif))
+                    HStack {
+                        Text("Today's forgotten saves")
+                            .font(.system(size: 22, weight: .regular, design: .serif))
+                        Spacer()
+                        if items.count >= 2 {
+                            Button("Connect in Cloud") {
+                                Task {
+                                    synthesisPlan = await service.synthesizeInCloud(items: Array(items.prefix(4)))
+                                }
+                            }
+                            .font(.footnote.weight(.semibold))
+                        }
+                    }
+
+                    if let plan = synthesisPlan {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Cloud Gemini plan")
+                                    .font(.headline)
+                                Spacer()
+                                Button("Dismiss") { synthesisPlan = nil }
+                                    .font(.caption)
+                            }
+                            Text(plan)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(16)
+                        .background(.white, in: RoundedRectangle(cornerRadius: 16))
+                    }
 
                     if let card = currentCard {
                         VStack(alignment: .leading, spacing: 12) {
