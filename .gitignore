@@ -1,0 +1,38 @@
+# OS & Editors
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+google-services.json
+GoogleService-Info.plist
+firebase-debug.log
+.firebase/
+
+# Node / Web / Extension
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# Android / Gradle
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+*.iml
+*.apk
+*.aab
+
+# iOS / Xcode
+ios/DerivedData/
+ios/build/
+*.xcuserdata/
+*.xcworkspace/xcuserdata/
+Pods/
