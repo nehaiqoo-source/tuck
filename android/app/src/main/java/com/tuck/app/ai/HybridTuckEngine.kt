@@ -17,7 +17,7 @@ class HybridTuckEngine {
 
     private val hybridModel = Firebase.ai(backend = GenerativeBackend.googleAI())
         .generativeModel(
-            modelName = "gemini-2.5-flash",
+            modelName = "gemini-3.8-flash",
             onDeviceConfig = OnDeviceConfig(
                 mode = InferenceMode.PREFER_ON_DEVICE
             )
@@ -25,7 +25,7 @@ class HybridTuckEngine {
 
     private val cloudSynthesisModel = Firebase.ai(backend = GenerativeBackend.googleAI())
         .generativeModel(
-            modelName = "gemini-2.5-flash",
+            modelName = "gemini-3.8-flash",
             onDeviceConfig = OnDeviceConfig(
                 mode = InferenceMode.ONLY_IN_CLOUD
             )

@@ -273,7 +273,7 @@ export function App() {
             >
               <option value="prefer_on_device">Hybrid: Prefer On-Device</option>
               <option value="only_on_device">Strict: On-Device Only</option>
-              <option value="only_in_cloud">Cloud: Gemini 2.5 Flash</option>
+              <option value="only_in_cloud">Cloud: Gemini 3.8 Flash</option>
             </select>
           </label>
 

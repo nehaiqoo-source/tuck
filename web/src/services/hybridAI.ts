@@ -12,7 +12,7 @@ import type {
   TuckSource,
 } from '../types';
 
-const CLOUD_MODEL = 'gemini-2.5-flash';
+const CLOUD_MODEL = 'gemini-3.8-flash';
 
 function toSdkMode(mode: HybridMode): InferenceMode {
   switch (mode) {
