@@ -1,0 +1,219 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: users/{uid}/items/{itemId}
+// Document ID: {itemId} (string, 1..120 chars; must match data.id)
+// Access: Strictly private to the authenticated owner (request.auth.uid == uid)
+// Fields:
+//   - id: string (required, immutable, 1..120 chars, must equal itemId)
+//   - title: string (required, 1..200 chars)
+//   - rawContent: string (required, 0..10000 chars)
+//   - url: string | null (optional, 0..2048 chars, must be empty or http(s)://)
+//   - imageDataUrl: string | null (optional, 0..500000 chars; MUST be absent or null when isPrivate == true)
+//   - source: string (required, enum: 'chrome-tab' | 'screenshot' | 'link' | 'note' | 'android' | 'ios')
+//   - summary: string (required, 0..1500 chars)
+//   - nextAction: string (required, 0..400 chars)
+//   - tags: list<string> (required, max 10 items, each string 1..50 chars)
+//   - isPrivate: bool (required)
+//   - status: string (required, enum: 'tucked' | 'kept' | 'done' | 'let-go')
+//   - inferenceMeta: map (required)
+//       - source: string (required, enum: 'on-device' | 'cloud' | 'local-preview')
+//       - model: string (required, 1..120 chars)
+//       - latencyMs: number (required, 0..600000)
+//       - modeUsed: string (required, enum: 'prefer_on_device' | 'only_on_device' | 'only_in_cloud')
+//       - note: string | null (optional, 0..500 chars)
+//   - createdAt: number (required, immutable, > 0; epoch ms)
+//   - updatedAt: number (required, > 0; epoch ms)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the request is from an authenticated user
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user owns the path
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Verify all required keys exist on a map
+    function hasRequiredFields(data, fields) {
+      return data.keys().hasAll(fields);
+    }
+
+    // Verify a map contains only allowed keys (strict schema enforcement)
+    function hasOnlyAllowedFields(data, fields) {
+      return data.keys().hasOnly(fields);
+    }
+
+    // Verify specified immutable fields have not changed on update
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // Validate string type and length bounds
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    // Validate http(s) URL format
+    function isValidUrl(url) {
+      return url is string &&
+             (url.matches('^https://.*') || url.matches('^http://.*'));
+    }
+
+    // Validate optional url field (absent, null, empty string, or http(s) URL up to 2048 chars)
+    function isValidOptionalUrl(data) {
+      return !('url' in data) ||
+             data.url == null ||
+             (data.url is string &&
+              data.url.size() <= 2048 &&
+              (data.url.size() == 0 || isValidUrl(data.url)));
+    }
+
+    // Validate imageDataUrl: must be absent or null when isPrivate == true;
+    // otherwise optional string up to 500000 chars
+    function isValidImageDataUrl(data) {
+      return (data.isPrivate == true &&
+              (!('imageDataUrl' in data) || data.imageDataUrl == null)) ||
+             (data.isPrivate == false &&
+              (!('imageDataUrl' in data) ||
+               data.imageDataUrl == null ||
+               isValidString(data.imageDataUrl, 0, 500000)));
+    }
+
+    // Validate a single tag string
+    function isValidTag(tag) {
+      return isValidString(tag, 1, 50);
+    }
+
+    // Deep-validate tags list (max 10 string elements, each 1..50 chars)
+    function isValidTagsList(tags) {
+      return tags is list &&
+             tags.size() <= 10 &&
+             (tags.size() < 1 || isValidTag(tags[0])) &&
+             (tags.size() < 2 || isValidTag(tags[1])) &&
+             (tags.size() < 3 || isValidTag(tags[2])) &&
+             (tags.size() < 4 || isValidTag(tags[3])) &&
+             (tags.size() < 5 || isValidTag(tags[4])) &&
+             (tags.size() < 6 || isValidTag(tags[5])) &&
+             (tags.size() < 7 || isValidTag(tags[6])) &&
+             (tags.size() < 8 || isValidTag(tags[7])) &&
+             (tags.size() < 9 || isValidTag(tags[8])) &&
+             (tags.size() < 10 || isValidTag(tags[9]));
+    }
+
+    // Validate inferenceMeta nested map
+    function isValidInferenceMeta(meta) {
+      return meta is map &&
+             hasRequiredFields(meta, ['source', 'model', 'latencyMs', 'modeUsed']) &&
+             hasOnlyAllowedFields(meta, ['source', 'model', 'latencyMs', 'modeUsed', 'note']) &&
+             meta.source is string &&
+             meta.source in ['on-device', 'cloud', 'local-preview'] &&
+             isValidString(meta.model, 1, 120) &&
+             meta.latencyMs is number &&
+             meta.latencyMs >= 0 &&
+             meta.latencyMs <= 600000 &&
+             meta.modeUsed is string &&
+             meta.modeUsed in ['prefer_on_device', 'only_on_device', 'only_in_cloud'] &&
+             (!('note' in meta) ||
+              meta.note == null ||
+              isValidString(meta.note, 0, 500));
+    }
+
+    // ===============================================================
+    // Domain Validators (Called on BOTH create and update)
+    // ===============================================================
+
+    function isValidTuckItem(data, itemId) {
+      return hasRequiredFields(data, [
+               'id',
+               'title',
+               'rawContent',
+               'source',
+               'summary',
+               'nextAction',
+               'tags',
+               'isPrivate',
+               'status',
+               'inferenceMeta',
+               'createdAt',
+               'updatedAt'
+             ]) &&
+             hasOnlyAllowedFields(data, [
+               'id',
+               'title',
+               'rawContent',
+               'url',
+               'imageDataUrl',
+               'source',
+               'summary',
+               'nextAction',
+               'tags',
+               'isPrivate',
+               'status',
+               'inferenceMeta',
+               'createdAt',
+               'updatedAt'
+             ]) &&
+             isValidString(data.id, 1, 120) &&
+             data.id == itemId &&
+             isValidString(data.title, 1, 200) &&
+             isValidString(data.rawContent, 0, 10000) &&
+             isValidOptionalUrl(data) &&
+             data.isPrivate is bool &&
+             isValidImageDataUrl(data) &&
+             data.source is string &&
+             data.source in ['chrome-tab', 'screenshot', 'link', 'note', 'android', 'ios'] &&
+             isValidString(data.summary, 0, 1500) &&
+             isValidString(data.nextAction, 0, 400) &&
+             isValidTagsList(data.tags) &&
+             data.status is string &&
+             data.status in ['tucked', 'kept', 'done', 'let-go'] &&
+             isValidInferenceMeta(data.inferenceMeta) &&
+             data.createdAt is number &&
+             data.createdAt > 0 &&
+             data.updatedAt is number &&
+             data.updatedAt > 0;
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /users/{uid}/items/{itemId} {
+      // Strictly owner-only read (supports get and collection queries like orderBy('createdAt', 'desc'))
+      allow read: if isOwner(uid);
+
+      // Owner-only create with full schema, type, size, and privacy validation
+      allow create: if isOwner(uid) &&
+                       isValidTuckItem(request.resource.data, itemId);
+
+      // Owner-only update with full validation + immutable field protection
+      allow update: if isOwner(uid) &&
+                       isValidTuckItem(request.resource.data, itemId) &&
+                       areImmutableFieldsUnchanged(['id', 'createdAt']);
+
+      // Owner-only delete
+      allow delete: if isOwner(uid);
+    }
+
+    // Default deny all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
