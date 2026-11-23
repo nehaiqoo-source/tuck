@@ -4,7 +4,6 @@ import { Activity, LogIn, LogOut, Wifi, WifiOff } from 'lucide-react';
 import {
   auth,
   isFirebaseConfigured,
-  signInWithGoogle,
   signOutUser,
 } from './services/firebase';
 import {
@@ -29,6 +28,7 @@ import {
   HybridLogDialog,
   type InferenceLogEntry,
 } from './components/HybridLogDialog';
+import { AuthDialog } from './components/AuthDialog';
 import type {
   AskShelfResult,
   HybridMode,
@@ -52,6 +52,7 @@ export function App() {
   const [asking, setAsking] = useState(false);
   const [askResult, setAskResult] = useState<AskShelfResult | null>(null);
   const [logOpen, setLogOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const [inferenceLog, setInferenceLog] = useState<InferenceLogEntry[]>([]);
 
   useEffect(() => {
@@ -386,7 +387,7 @@ export function App() {
               <button
                 type="button"
                 className="btn"
-                onClick={() => void signInWithGoogle()}
+                onClick={() => setAuthOpen(true)}
               >
                 <LogIn size={14} />
                 Sign in to sync
@@ -465,6 +466,8 @@ export function App() {
         entries={inferenceLog}
         onClose={() => setLogOpen(false)}
       />
+
+      <AuthDialog open={authOpen} onClose={() => setAuthOpen(false)} />
 
       <footer
         style={{

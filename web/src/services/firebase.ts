@@ -1,8 +1,10 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import {
+  createUserWithEmailAndPassword,
   getAuth,
   GoogleAuthProvider,
   signInAnonymously,
+  signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
   type Auth,
@@ -79,6 +81,17 @@ export async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
   const res = await signInWithPopup(auth, provider);
   return res.user;
+}
+
+export async function signInWithEmail(email: string, password: string) {
+  if (!auth) return null;
+  try {
+    const res = await signInWithEmailAndPassword(auth, email, password);
+    return res.user;
+  } catch {
+    const res = await createUserWithEmailAndPassword(auth, email, password);
+    return res.user;
+  }
 }
 
 export async function signInGuest() {
