@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ImagePlus, Lock, Plus, X } from 'lucide-react';
+import { ImagePlus, Lock, Mic, MicOff, Plus, X } from 'lucide-react';
 import type { TuckSource } from '../types';
 
 interface QuickTuckComposerProps {
@@ -20,6 +20,7 @@ const URL_REGEX = /https?:\/\/[^\s]+/i;
 export function QuickTuckComposer({ busy, onTuck }: QuickTuckComposerProps) {
   const [text, setText] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [listening, setListening] = useState(false);
   const [imagePreview, setImagePreview] = useState<{
     dataUrl: string;
     base64: string;
@@ -27,6 +28,64 @@ export function QuickTuckComposer({ busy, onTuck }: QuickTuckComposerProps) {
     name: string;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
+
+  const toggleVoice = () => {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const win = window as unknown as {
+      SpeechRecognition?: new () => {
+        lang: string;
+        interimResults: boolean;
+        onresult: (ev: {
+          results: ArrayLike<ArrayLike<{ transcript: string }>>;
+        }) => void;
+        onend: () => void;
+        onerror: () => void;
+        start: () => void;
+        stop: () => void;
+      };
+      webkitSpeechRecognition?: new () => {
+        lang: string;
+        interimResults: boolean;
+        onresult: (ev: {
+          results: ArrayLike<ArrayLike<{ transcript: string }>>;
+        }) => void;
+        onend: () => void;
+        onerror: () => void;
+        start: () => void;
+        stop: () => void;
+      };
+    };
+
+    const SpeechCtor = win.SpeechRecognition || win.webkitSpeechRecognition;
+    if (!SpeechCtor) {
+      alert('Voice input is not supported in this browser. Try Chrome Desktop or Android.');
+      return;
+    }
+
+    const recognition = new SpeechCtor();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((r) => r[0]?.transcript || '')
+        .join(' ')
+        .trim();
+      if (transcript) {
+        setText((prev) => (prev ? `${prev} ${transcript}` : transcript));
+      }
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+    recognitionRef.current = recognition;
+    setListening(true);
+    recognition.start();
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -147,6 +206,16 @@ export function QuickTuckComposer({ busy, onTuck }: QuickTuckComposerProps) {
           >
             <ImagePlus size={15} />
             Add screenshot
+          </button>
+
+          <button
+            type="button"
+            className={`btn ${listening ? 'btn-primary' : ''}`}
+            onClick={toggleVoice}
+            disabled={busy}
+          >
+            {listening ? <MicOff size={15} /> : <Mic size={15} />}
+            {listening ? 'Listening...' : 'Voice tuck'}
           </button>
 
           <label className="toggle-pill">

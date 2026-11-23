@@ -198,6 +198,31 @@ export function App() {
     await removeItem(user?.uid ?? null, id);
   };
 
+  const handleMoveToBookmarks = async (id: string) => {
+    syncLocal((prev) =>
+      prev.map((i) =>
+        i.id === id ? { ...i, status: 'kept', updatedAt: Date.now() } : i
+      )
+    );
+    await updateItemStatus(user?.uid ?? null, id, 'kept');
+  };
+
+  const handleRemoveMany = async (ids: string[]) => {
+    const idSet = new Set(ids);
+    syncLocal((prev) => prev.filter((i) => !idSet.has(i.id)));
+    setSelectedIds((prev) => prev.filter((x) => !idSet.has(x)));
+    for (const id of ids) {
+      await removeItem(user?.uid ?? null, id);
+    }
+  };
+
+  const handleImportItems = async (imported: TuckItem[]) => {
+    syncLocal((prev) => [...imported, ...prev]);
+    for (const item of imported) {
+      await persistItem(user?.uid ?? null, item);
+    }
+  };
+
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -423,6 +448,9 @@ export function App() {
           onClearSelection={() => setSelectedIds([])}
           onSynthesize={handleSynthesize}
           onSynthesizeCluster={handleSynthesizeCluster}
+          onMoveToBookmarks={handleMoveToBookmarks}
+          onRemoveMany={handleRemoveMany}
+          onImportItems={handleImportItems}
           onDelete={handleDelete}
         />
       </main>
