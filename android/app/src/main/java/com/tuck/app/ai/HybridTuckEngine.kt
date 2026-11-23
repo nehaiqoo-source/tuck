@@ -3,16 +3,18 @@ package com.tuck.app.ai
 import android.graphics.Bitmap
 import android.os.SystemClock
 import com.google.firebase.Firebase
+import com.google.firebase.ai.InferenceMode
+import com.google.firebase.ai.OnDeviceConfig
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
-import com.google.firebase.ai.type.InferenceMode
-import com.google.firebase.ai.type.OnDeviceConfig
+import com.google.firebase.ai.type.PublicPreviewAPI
 import com.google.firebase.ai.type.content
 import com.tuck.app.model.InferenceMeta
 import com.tuck.app.model.TuckItem
 import org.json.JSONObject
 import java.util.UUID
 
+@OptIn(PublicPreviewAPI::class)
 class HybridTuckEngine {
 
     private val hybridModel = Firebase.ai(backend = GenerativeBackend.googleAI())
