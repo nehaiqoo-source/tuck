@@ -74,8 +74,8 @@ select {
 
 .brand {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-end;
+  gap: 10px;
 }
 
 .brand-mark {
@@ -90,6 +90,7 @@ select {
 .brand-sub {
   font-size: 0.85rem;
   color: var(--ink-muted);
+  padding-bottom: 4px;
 }
 
 .topbar-controls {

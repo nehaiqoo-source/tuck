@@ -253,7 +253,7 @@ export function App() {
               <img
                 src="/tuck-logo.svg"
                 alt="Tuck"
-                width={138}
+                width={102}
                 height={36}
                 style={{ display: 'block', height: 36, width: 'auto' }}
               />

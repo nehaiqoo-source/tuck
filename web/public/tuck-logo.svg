@@ -1,10 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 184 48" width="184" height="48" role="img" aria-label="Tuck">
-  <!-- Terracotta tucked-card icon -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 136 48" width="136" height="48" role="img" aria-label="Tuck">
   <rect x="2" y="2" width="44" height="44" rx="13" fill="#C25934"/>
-  <!-- Subtle tucked corner fold -->
   <path d="M33 2 H33 C40.18 2 46 7.82 46 15 V15 H37 C34.79 15 33 13.21 33 11 V2 Z" fill="#9E4222" opacity="0.45"/>
-  <!-- Serif T inside badge -->
   <text x="24" y="34" text-anchor="middle" font-family="Georgia, 'Instrument Serif', serif" font-size="29" fill="#FAF8F4">T</text>
-  <!-- Editorial wordmark -->
-  <text x="58" y="34" font-family="Georgia, 'Instrument Serif', serif" font-size="34" letter-spacing="-0.8" fill="#1C1917">Tuck</text>
+  <text x="56" y="35" font-family="Georgia, 'Instrument Serif', serif" font-size="34" letter-spacing="-0.8" fill="#1C1917">Tuck</text>
 </svg>
