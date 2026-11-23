@@ -24,11 +24,15 @@ build/
 # Android / Gradle
 android/.gradle/
 android/local.properties
+android/keystore.properties
 android/app/build/
 android/build/
 *.iml
 *.apk
 *.aab
+*.jks
+*.keystore
+releases/
 
 # iOS / Xcode
 ios/DerivedData/
