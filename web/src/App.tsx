@@ -249,9 +249,7 @@ export function App() {
       <header className="topbar">
         <div className="brand">
           <h1 className="brand-mark">Tuck</h1>
-          <span className="brand-sub">
-            Rescue the tabs &amp; screenshots you swore you&apos;d check later
-          </span>
+          <span className="brand-sub">Read it later, actually.</span>
         </div>
 
         <div className="topbar-controls">
