@@ -174,12 +174,19 @@ private fun TuckAndroidScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Tuck",
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = InkBlack
-                )
+                Column {
+                    Text(
+                        text = "Tuck",
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = InkBlack
+                    )
+                    Text(
+                        text = "Read it later, actually.",
+                        fontSize = 12.sp,
+                        color = MutedStone
+                    )
+                }
                 Surface(
                     color = SageSoft,
                     shape = RoundedCornerShape(999.dp)

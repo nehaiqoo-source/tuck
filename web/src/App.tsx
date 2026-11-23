@@ -386,6 +386,9 @@ export function App() {
           <a href="/on-device-ai-vs-cloud-ai-privacy.html" style={{ color: 'inherit' }}>
             On-device AI
           </a>
+          <a href="/privacy.html" style={{ color: 'inherit' }}>
+            Privacy
+          </a>
           <a
             href="https://github.com/nehaiqoo-source/tuck"
             target="_blank"

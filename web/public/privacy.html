@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy | Tuck</title>
+    <meta name="description" content="Privacy policy for Tuck across Web, Chrome Extension, Android, and iOS." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://tucktabs.app/privacy.html" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      :root { --bg:#faf8f4; --border:#e6dfd4; --ink:#1c1917; --muted:#57524b; --accent:#c25934; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; line-height:1.7; }
+      .wrap { max-width:720px; margin:0 auto; padding:40px 20px 80px; }
+      header { display:flex; justify-content:space-between; align-items:center; padding-bottom:20px; border-bottom:1px solid var(--border); margin-bottom:32px; }
+      .brand { font-family:Georgia,serif; font-size:28px; color:var(--ink); text-decoration:none; }
+      h1 { font-family:Georgia,serif; font-weight:400; font-size:38px; margin:0 0 12px; }
+      h2 { font-family:Georgia,serif; font-weight:400; font-size:24px; margin:28px 0 10px; }
+      p { margin:0 0 16px; color:var(--muted); font-size:16px; }
+      a { color:var(--accent); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="/">Tuck</a>
+        <a href="/" style="text-decoration:none;font-size:14px;font-weight:600;">Back to Tuck</a>
+      </header>
+      <h1>Privacy Policy</h1>
+      <p>Effective date: November 23, 2026</p>
+      <p>
+        Tuck ("we", "our") builds cross-platform software (Web at tucktabs.app, Chrome Extension, Android, and iOS) to help you save and review open tabs, links, notes, and screenshots.
+      </p>
+      <h2>1. Data processed on your device</h2>
+      <p>
+        Tuck uses Firebase AI Logic in prefer-on-device mode. When your device supports a local model (such as Gemini Nano on Chrome or Android, or Apple Foundation Models on iOS), summarization and tagging run directly on your hardware without sending your content to remote servers.
+      </p>
+      <h2>2. Private screenshots and notes</h2>
+      <p>
+        When you mark an item as Private, Tuck keeps any attached screenshot image strictly on your device. Our Firestore Security Rules reject writes that include image data for private items.
+      </p>
+      <h2>3. Cloud sync and Cloud Gemini fallback</h2>
+      <p>
+        If you sign in with Google, your saved item text, tags, and status sync to your private Cloud Firestore path (users/{uid}/items) so you can access them across your devices. If no local model is available on your device, or when you explicitly tap "Connect dots in Cloud," the selected text is processed via Firebase AI Logic (Cloud Gemini) protected by Firebase App Check.
+      </p>
+      <h2>4. Data deletion and contact</h2>
+      <p>
+        You can delete any saved item at any time directly inside the app. We do not sell user data or run third-party ad trackers. For privacy questions or account deletion requests, open an issue at <a href="https://github.com/nehaiqoo-source/tuck">github.com/nehaiqoo-source/tuck</a>.
+      </p>
+    </div>
+  </body>
+</html>
