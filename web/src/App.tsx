@@ -249,13 +249,15 @@ export function App() {
       <header className="topbar">
         <div className="brand">
           <h1 className="brand-mark">
-            <img
-              src="/tuck-logo.svg"
-              alt="Tuck"
-              width={138}
-              height={36}
-              style={{ display: 'block', height: 36, width: 'auto' }}
-            />
+            <a href="/" aria-label="Tuck home" style={{ display: 'inline-block', textDecoration: 'none' }}>
+              <img
+                src="/tuck-logo.svg"
+                alt="Tuck"
+                width={138}
+                height={36}
+                style={{ display: 'block', height: 36, width: 'auto' }}
+              />
+            </a>
           </h1>
           <span className="brand-sub">Read it later, actually.</span>
         </div>
