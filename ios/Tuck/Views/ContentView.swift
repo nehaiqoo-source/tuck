@@ -44,8 +44,13 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     // Header badge
                     HStack {
-                        Text("Tuck")
-                            .font(.system(size: 34, weight: .regular, design: .serif))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Tuck")
+                                .font(.system(size: 34, weight: .regular, design: .serif))
+                            Text("Read it later, actually.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                         Spacer()
                         Text("Hybrid AI · On-Device First")
                             .font(.caption.weight(.semibold))
