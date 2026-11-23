@@ -359,6 +359,45 @@ export function App() {
         entries={inferenceLog}
         onClose={() => setLogOpen(false)}
       />
+
+      <footer
+        style={{
+          marginTop: 56,
+          paddingTop: 22,
+          borderTop: '1px solid var(--border)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 12,
+          fontSize: '0.82rem',
+          color: 'var(--ink-muted)',
+        }}
+      >
+        <span>Tuck · Open source (Apache 2.0)</span>
+        <nav aria-label="Guides and resources" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <a href="/blog/" style={{ color: 'inherit' }}>
+            Guides
+          </a>
+          <a href="/how-to-stop-hoarding-browser-tabs.html" style={{ color: 'inherit' }}>
+            Tab clutter
+          </a>
+          <a href="/organize-phone-screenshots-privately.html" style={{ color: 'inherit' }}>
+            Private screenshots
+          </a>
+          <a href="/on-device-ai-vs-cloud-ai-privacy.html" style={{ color: 'inherit' }}>
+            On-device AI
+          </a>
+          <a
+            href="https://github.com/nehaiqoo-source/tuck"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: 'inherit' }}
+          >
+            GitHub
+          </a>
+        </nav>
+      </footer>
     </div>
   );
 }

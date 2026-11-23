@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>On-Device AI vs Cloud AI: What Belongs Locally and What Needs the Cloud | Tuck</title>
+    <meta
+      name="description"
+      content="How Tuck uses Firebase AI Logic Hybrid Inference to run daily private triage on-device with Gemini Nano and Apple Foundation Models, and Cloud Gemini for multi-item synthesis."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://tucktabs.app/on-device-ai-vs-cloud-ai-privacy.html" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://tucktabs.app/on-device-ai-vs-cloud-ai-privacy.html" />
+    <meta property="og:title" content="On-Device AI vs Cloud AI: A Practical Split" />
+    <meta property="og:description" content="How Firebase AI Logic Hybrid Inference combines local Gemini Nano privacy with Cloud Gemini reasoning." />
+    <meta property="og:image" content="https://tucktabs.app/og-image.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "On-Device AI vs Cloud AI: What Belongs Locally and What Needs the Cloud",
+        "datePublished": "2026-11-23",
+        "author": { "@type": "Organization", "name": "Tuck" },
+        "publisher": { "@type": "Organization", "name": "Tuck", "url": "https://tucktabs.app/" }
+      }
+    </script>
+    <style>
+      :root { --bg:#faf8f4; --surface:#fff; --border:#e6dfd4; --ink:#1c1917; --muted:#57524b; --accent:#c25934; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; line-height:1.72; }
+      .wrap { max-width:720px; margin:0 auto; padding:40px 20px 80px; }
+      header { display:flex; justify-content:space-between; align-items:center; padding-bottom:20px; border-bottom:1px solid var(--border); margin-bottom:36px; }
+      .brand { font-family:Georgia,serif; font-size:28px; color:var(--ink); text-decoration:none; }
+      .cta { background:var(--accent); color:#fff; text-decoration:none; padding:9px 16px; border-radius:999px; font-size:14px; font-weight:600; }
+      h1 { font-family:Georgia,serif; font-weight:400; font-size:42px; line-height:1.15; margin:0 0 18px; }
+      h2 { font-family:Georgia,serif; font-weight:400; font-size:28px; margin:34px 0 12px; }
+      p { margin:0 0 18px; color:var(--muted); font-size:17px; }
+      code { background:#f3efe8; padding:2px 6px; border-radius:6px; font-size:14px; color:#1c1917; }
+      .box { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px 24px; margin:28px 0; }
+      a { color:var(--accent); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="/">Tuck</a>
+        <div style="display:flex;gap:14px;align-items:center;">
+          <a href="/blog/" style="text-decoration:none;color:#645e56;font-size:14px;">All guides</a>
+          <a class="cta" href="/">Try Tuck Free</a>
+        </div>
+      </header>
+
+      <article>
+        <h1>On-device AI vs cloud AI: what belongs locally and what needs the cloud</h1>
+        <p>
+          Sending every tiny prompt to a cloud API is slow, costs money on every click, and forces users to ship personal text over the network. Running everything locally has its own limit: small on-device models cannot easily combine ten separate documents into a detailed plan.
+        </p>
+
+        <h2>What runs on-device in Tuck</h2>
+        <p>
+          Every time you tuck a tab, note, or screenshot, Tuck calls the Firebase AI Logic SDK in <code>PREFER_ON_DEVICE</code> mode. On supported Chrome and Android devices, Gemini Nano generates a short title, summary, and next step right on the hardware, even with Wi-Fi turned off. On iOS, it targets Apple Foundation Models.
+        </p>
+
+        <h2>When Cloud Gemini steps in</h2>
+        <p>
+          Cloud fallback happens in two places. First, if a user opens Tuck on a browser or phone without a local model, Firebase AI Logic automatically routes the request to <code>gemini-3.5-flash-lite</code> so the app still works with zero setup. Second, when you select several saved items on your shelf and click "Connect dots in Cloud," Tuck explicitly uses <code>ONLY_IN_CLOUD</code> mode to merge those saves into one ordered plan.
+        </p>
+
+        <div class="box">
+          <p style="margin-bottom:12px;color:#1c1917;font-weight:600;">See the routing live</p>
+          <p style="margin-bottom:16px;">
+            Open Tuck and click "Hybrid AI log" in the header to inspect which model handled each item and how many milliseconds it took.
+          </p>
+          <a class="cta" href="/">Open Tuck Web App</a>
+        </div>
+      </article>
+    </div>
+  </body>
+</html>
