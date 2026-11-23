@@ -248,7 +248,15 @@ export function App() {
     <div className="app-shell">
       <header className="topbar">
         <div className="brand">
-          <h1 className="brand-mark">Tuck</h1>
+          <h1 className="brand-mark">
+            <img
+              src="/tuck-logo.svg"
+              alt="Tuck"
+              width={138}
+              height={36}
+              style={{ display: 'block', height: 36, width: 'auto' }}
+            />
+          </h1>
           <span className="brand-sub">Read it later, actually.</span>
         </div>
 
