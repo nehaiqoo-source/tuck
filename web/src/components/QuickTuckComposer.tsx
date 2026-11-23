@@ -84,7 +84,7 @@ export function QuickTuckComposer({ busy, onTuck }: QuickTuckComposerProps) {
             className="filter-pill"
             onClick={() => {
               setText(
-                'Lab report receipt from Apollo Diagnostics — ₹2,150 paid Nov 18, claim under medical reimbursement before Dec 10.'
+                'Lab report receipt from Apollo Diagnostics: ₹2,150 paid Nov 18, claim under medical reimbursement before Dec 10.'
               );
               setIsPrivate(true);
             }}

@@ -28,7 +28,7 @@ export const SEED_ITEMS: TuckItem[] = [
   },
   {
     id: 'seed-2',
-    title: 'Dentist receipt — Dr. Mehta Clinic (₹3,400)',
+    title: 'Dentist receipt: Dr. Mehta Clinic (₹3,400)',
     rawContent:
       'Screenshot of dental cleaning & X-ray receipt dated Nov 8. Follow-up checkup recommended in 6 months. Claim under corporate OPD reimbursement before Dec 15.',
     source: 'screenshot',

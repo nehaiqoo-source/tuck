@@ -90,7 +90,7 @@ export function QuietShelf({
       {selectedIds.length >= 2 && (
         <div className="synthesis-bar">
           <span>
-            <strong>{selectedIds.length} items selected</strong> — ready to
+            <strong>{selectedIds.length} items selected</strong>, ready to
             combine into one plan using Cloud Gemini (<code>ONLY_IN_CLOUD</code>).
           </span>
           <div style={{ display: 'flex', gap: 8 }}>

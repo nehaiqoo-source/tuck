@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Tuck — Quiet Tab Rescuer",
+  "name": "Tuck: Tab Rescuer",
   "version": "0.1.0",
   "description": "One-click tuck for the open tabs you swear you'll read later. Summarizes privately on-device and closes tab clutter.",
   "permissions": ["tabs", "activeTab", "scripting", "storage", "contextMenus"],

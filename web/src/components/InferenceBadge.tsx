@@ -23,7 +23,7 @@ export function InferenceBadge({ meta }: InferenceBadgeProps) {
   return (
     <span
       className={`inference-badge ${meta.source}`}
-      title={`${meta.model}${meta.note ? ` — ${meta.note}` : ''}`}
+      title={`${meta.model}${meta.note ? ` (${meta.note})` : ''}`}
     >
       <Icon size={13} aria-hidden="true" />
       <span>{label}</span>

@@ -107,7 +107,7 @@ private fun TuckAndroidScreen(
             listOf(
                 TuckItem(
                     id = "and-seed-1",
-                    title = "Dentist receipt — Dr. Mehta Clinic",
+                    title = "Dentist receipt: Dr. Mehta Clinic",
                     rawContent = "OPD reimbursement due Dec 15",
                     source = "screenshot",
                     summary = "Dental clinic receipt for ₹3,400 with Dec 15 reimbursement deadline.",
