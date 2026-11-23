@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.OAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.tuck.app.ai.HybridTuckEngine
 import com.tuck.app.model.InferenceMeta
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 TuckAndroidScreen(
+                    activity = this,
                     engine = engine,
                     initialDraft = sharedDraft.value,
                     sharedScreenshot = sharedBitmap.value,
@@ -96,6 +98,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun TuckAndroidScreen(
+    activity: ComponentActivity,
     engine: HybridTuckEngine,
     initialDraft: String,
     sharedScreenshot: Bitmap?,
@@ -737,6 +740,27 @@ private fun TuckAndroidScreen(
                     )
                     if (authError != null) {
                         Text(authError.orEmpty(), color = Terracotta, fontSize = 12.sp)
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            authBusy = true
+                            authError = null
+                            val provider = OAuthProvider.newBuilder("google.com").build()
+                            auth.startActivityForSignInWithProvider(activity, provider)
+                                .addOnSuccessListener {
+                                    authBusy = false
+                                    showAuthDialog = false
+                                }
+                                .addOnFailureListener { err ->
+                                    authBusy = false
+                                    authError = err.localizedMessage ?: "Google sign-in failed."
+                                }
+                        },
+                        enabled = !authBusy,
+                        shape = RoundedCornerShape(999.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Continue with Google", color = InkBlack)
                     }
                 }
             },
