@@ -1,29 +1,39 @@
-# Tuck
+# Tuck: Read it later, actually.
 
-Tuck is an app for Web, Chrome, Android, and iOS that deals with the open tabs, screenshots, and saved links people plan to check later and never open again.
+Tuck is an open-source app for Web, Chrome, Android, and iOS that deals with the open tabs, screenshots, and saved links people plan to check later and never open again.
 
-Live web app: https://tucktabs.app
+Live web app: https://tucktabs.app  
+Privacy policy: https://tucktabs.app/privacy.html
 
 Built for the #BuildHybridAI 2026 Firebase Hybrid AI Hackathon.
 
-## Why hybrid inference
+## What Tuck does
 
-Screenshots and open tabs often contain private details like medical receipts, personal chats, or bank notes. Tuck runs Firebase AI Logic in `PREFER_ON_DEVICE` mode first so private captures are summarized and tagged locally on the device, even offline:
+- Daily 3-card triage deck: Surfaces three older saves each day with a short summary, suggested next step, and one-click executable actions (`.ics` calendar export, email draft copy, and interactive mini-checklists).
+- Separate Read Later and Bookmarks tabs: Temporary saves stay in Read Later (with 14-day stale decay detection and one-click sweep), while permanent references live in Bookmarks.
+- Ask your shelf: Natural-language Q&A across saved tabs, notes, and screenshots with source card citations.
+- Visual Connection Map: Interactive SVG knowledge graph linking saved items by shared topic hubs, with one-click cluster synthesis in Cloud Gemini.
+- Two-stage Local Privacy Shield: Before any Cloud Gemini call, sensitive details (emails, phone numbers, currency amounts, policy or claim IDs, and personal titles) are masked locally on-device and restored only on the user's screen.
+- Voice tuck, duplicate cleaner, and zero lock-in: Hands-free Web Speech capture, one-click duplicate detection and cleanup, Chrome/Pocket `bookmarks.html` import, and Markdown/JSON export.
+- Cross-device sync: Real-time Firestore sync across Web and Android using Google Sign-In or Email/Password.
 
-- Web (Chrome): `firebase/ai` using `InferenceMode.PREFER_ON_DEVICE` (Gemini Nano in Chrome) with automatic fallback to `gemini-3.5-flash-lite`.
-- Android (Kotlin and Jetpack Compose): `firebase-ai` + `firebase-ai-ondevice` with `InferenceMode.PREFER_ON_DEVICE` (Gemini Nano via Android AICore) and Android Share Sheet support for links and screenshots.
-- iOS (SwiftUI): Firebase iOS SDK (`FirebaseAI`) targeting Apple Foundation Models on-device with Cloud Gemini fallback.
-- Chrome Extension (Manifest V3): One-click "Tuck this tab" popup and right-click menu that closes tab clutter and hands off to Tuck Web.
+## How Firebase AI Logic hybrid inference works in Tuck
 
-When you select two or more saved items on your shelf to combine into a single plan (for example, turning saved Kyoto tabs and screenshots into a weekend itinerary), Tuck explicitly calls `InferenceMode.ONLY_IN_CLOUD` (`gemini-3.5-flash-lite`) for multi-item synthesis.
+- Web (Chrome): `firebase/ai` using `InferenceMode.PREFER_ON_DEVICE` (Gemini Nano in Chrome) with automatic fallback to `gemini-3.5-flash-lite`, protected by Firebase App Check (reCAPTCHA Enterprise). Includes a live Hybrid AI inference log in the header.
+- Chrome Extension (Manifest V3, v0.3.0): One-click "Tuck this tab" popup, right-click context menu, and a "Rescue all open tabs" panic button that closes tab clutter and hands tabs directly to `https://tucktabs.app`.
+- Android (Kotlin and Jetpack Compose, v0.4.0): Uses `firebase-ai` and `firebase-ai-ondevice` with `InferenceMode.PREFER_ON_DEVICE` (Gemini Nano via Android AICore), Android Share Sheet (`ACTION_SEND` for links and screenshots), Local Privacy Shield, Ask Your Shelf, Read Later vs Bookmarks tabs, and Google + Email/Password sync.
+- iOS (SwiftUI): Firebase iOS SDK (`FirebaseAI`) targeting Apple Foundation Models on-device with Cloud Gemini (`gemini-3.5-flash-lite`) fallback.
+- Multi-item Cloud Synthesis: Selecting two or more saved items (or clicking a topic cluster on the Connection Map) explicitly invokes `InferenceMode.ONLY_IN_CLOUD` (`gemini-3.5-flash-lite`) after running the Local Privacy Shield.
 
 ## Repository layout
 
-- `web/` - React, Vite, and TypeScript web app with live Hybrid AI inference log and daily 3-card triage deck
-- `chrome-extension/` - Manifest V3 extension for one-click tab tucking and Web handoff
-- `android/` - Native Kotlin and Jetpack Compose app with `firebase-ai-ondevice` and Share Sheet
-- `ios/` - Native SwiftUI package with `FirebaseAI` and shared Firestore data model
+- `web/` - React, Vite, and TypeScript PWA (`https://tucktabs.app`) + static SEO guides and sitemap
+- `chrome-extension/` - Manifest V3 extension (v0.3.0) with icons and batch tab rescue
+- `android/` - Native Kotlin and Jetpack Compose app (v0.4.0) with `firebase-ai-ondevice`
+- `ios/` - Native SwiftUI package with `FirebaseAI` and shared Firestore schema
 - `firebase/` - Validated owner-only Firestore Security Rules and composite indexes
+- `play-store-assets/` - Google Play Console graphics, screenshots, and listing copy
+- `chrome-store-assets/` - Chrome Web Store screenshots, promo tiles, and permission justifications
 
 ## Running locally
 
@@ -31,7 +41,7 @@ When you select two or more saved items on your shelf to combine into a single p
 
 ```bash
 cd web
-cp .env.example .env.local   # Add your Firebase Web config
+cp .env.example .env.local   # Add your Firebase Web config and reCAPTCHA Enterprise site key
 npm install
 npm run dev
 ```
