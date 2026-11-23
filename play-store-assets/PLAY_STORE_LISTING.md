@@ -2,7 +2,7 @@
 
 ## App Details
 - **App name:** Tuck: Read it later, actually
-- **Package name:** `com.tuck.app`
+- **Package name:** `app.tucktabs.android`
 - **Category:** Productivity
 - **Privacy Policy URL:** `https://tucktabs.app/privacy.html`
 - **Website:** `https://tucktabs.app`
