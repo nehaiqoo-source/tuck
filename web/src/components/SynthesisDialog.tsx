@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import { ShieldCheck, X } from 'lucide-react';
 import type { SynthesisResult } from '../types';
 import { InferenceBadge } from './InferenceBadge';
 
@@ -75,7 +75,17 @@ export function SynthesisDialog({ result, onClose }: SynthesisDialogProps) {
         <div className="dialog-inner">
           <div className="dialog-head">
             <div>
-              <InferenceBadge meta={result.inferenceMeta} />
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                <InferenceBadge meta={result.inferenceMeta} />
+                {result.privacyShield && result.privacyShield.redactedCount > 0 && (
+                  <span className="shield-pill">
+                    <ShieldCheck size={13} />
+                    Privacy Shield: {result.privacyShield.redactedCount} detail
+                    {result.privacyShield.redactedCount > 1 ? 's' : ''} masked
+                    locally
+                  </span>
+                )}
+              </div>
               <h2
                 id="synthesis-dialog-title"
                 className="dialog-title"

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tuck: Read it later, actually.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "One-click tuck for the open tabs you swear you'll read later. Summarizes privately on-device and closes tab clutter.",
   "permissions": ["tabs", "activeTab", "scripting", "storage", "contextMenus"],
   "icons": {

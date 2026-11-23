@@ -8,6 +8,7 @@ import {
   signOutUser,
 } from './services/firebase';
 import {
+  askYourShelf,
   summarizeTuckItem,
   synthesizeItemsInCloud,
 } from './services/hybridAI';
@@ -21,6 +22,7 @@ import {
 } from './services/storage';
 import { QuickTuckComposer } from './components/QuickTuckComposer';
 import { DailyTriageDeck } from './components/DailyTriageDeck';
+import { AskShelfBar } from './components/AskShelfBar';
 import { QuietShelf } from './components/QuietShelf';
 import { SynthesisDialog } from './components/SynthesisDialog';
 import {
@@ -28,6 +30,7 @@ import {
   type InferenceLogEntry,
 } from './components/HybridLogDialog';
 import type {
+  AskShelfResult,
   HybridMode,
   SynthesisResult,
   TuckItem,
@@ -46,6 +49,8 @@ export function App() {
   const [synthesizing, setSynthesizing] = useState(false);
   const [synthesisResult, setSynthesisResult] =
     useState<SynthesisResult | null>(null);
+  const [asking, setAsking] = useState(false);
+  const [askResult, setAskResult] = useState<AskShelfResult | null>(null);
   const [logOpen, setLogOpen] = useState(false);
   const [inferenceLog, setInferenceLog] = useState<InferenceLogEntry[]>([]);
 
@@ -199,8 +204,7 @@ export function App() {
     );
   };
 
-  const handleSynthesize = async () => {
-    const chosen = items.filter((i) => selectedIds.includes(i.id));
+  const runCloudSynthesis = async (chosen: TuckItem[], label?: string) => {
     if (chosen.length < 2) return;
     setSynthesizing(true);
     try {
@@ -209,7 +213,7 @@ export function App() {
       setInferenceLog((prev) => [
         {
           id: result.id,
-          task: `Cloud Synthesis (${chosen.length} items)`,
+          task: label || `Cloud Synthesis (${chosen.length} items)`,
           meta: result.inferenceMeta,
           timestamp: Date.now(),
         },
@@ -220,9 +224,67 @@ export function App() {
     }
   };
 
-  // Ingest one-click tab handoff from the Tuck Chrome Extension (#tuck=...)
+  const handleSynthesize = async () => {
+    const chosen = items.filter((i) => selectedIds.includes(i.id));
+    await runCloudSynthesis(chosen);
+  };
+
+  const handleSynthesizeCluster = async (clusterItems: TuckItem[]) => {
+    await runCloudSynthesis(
+      clusterItems,
+      `Map Cluster Synthesis (${clusterItems.length} items)`
+    );
+  };
+
+  const handleAskShelf = async (question: string) => {
+    setAsking(true);
+    try {
+      const res = await askYourShelf(question, items, mode);
+      setAskResult(res);
+      setInferenceLog((prev) => [
+        {
+          id: `ask-${Date.now()}`,
+          task: `Ask Shelf: ${question.slice(0, 36)}`,
+          meta: res.inferenceMeta,
+          timestamp: Date.now(),
+        },
+        ...prev.slice(0, 14),
+      ]);
+    } finally {
+      setAsking(false);
+    }
+  };
+
+  // Ingest one-click single (#tuck=) or batch (#tuck-batch=) tab handoff from Tuck Chrome Extension
   useEffect(() => {
     const hash = window.location.hash;
+    if (hash.startsWith('#tuck-batch=')) {
+      try {
+        const batch = JSON.parse(decodeURIComponent(hash.slice(12))) as Array<{
+          title?: string;
+          url?: string;
+          rawContent?: string;
+          isPrivate?: boolean;
+        }>;
+        window.history.replaceState(null, '', window.location.pathname);
+        if (Array.isArray(batch)) {
+          void (async () => {
+            for (const entry of batch.slice(0, 8)) {
+              await handleTuck({
+                rawContent: entry.rawContent || entry.title || entry.url || 'Saved tab',
+                url: entry.url,
+                source: 'chrome-tab',
+                isPrivate: Boolean(entry.isPrivate),
+              });
+            }
+          })();
+        }
+      } catch {
+        // Ignore malformed batch hash
+      }
+      return;
+    }
+
     if (!hash.startsWith('#tuck=')) return;
     try {
       const decoded = JSON.parse(decodeURIComponent(hash.slice(6))) as {
@@ -346,6 +408,13 @@ export function App() {
           onLetGo={handleLetGo}
         />
 
+        <AskShelfBar
+          items={items}
+          busy={asking}
+          result={askResult}
+          onAsk={handleAskShelf}
+        />
+
         <QuietShelf
           items={items}
           selectedIds={selectedIds}
@@ -353,6 +422,7 @@ export function App() {
           onToggleSelect={handleToggleSelect}
           onClearSelection={() => setSelectedIds([])}
           onSynthesize={handleSynthesize}
+          onSynthesizeCluster={handleSynthesizeCluster}
           onDelete={handleDelete}
         />
       </main>

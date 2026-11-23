@@ -7,6 +7,7 @@ const noteInputEl = document.getElementById('note-input');
 const privateToggleEl = document.getElementById('private-toggle');
 const closeTabToggleEl = document.getElementById('close-tab-toggle');
 const tuckBtnEl = document.getElementById('tuck-btn');
+const rescueAllBtnEl = document.getElementById('rescue-all-btn');
 const openWebBtnEl = document.getElementById('open-web-btn');
 const statusMsgEl = document.getElementById('status-msg');
 const recentListEl = document.getElementById('recent-list');
@@ -103,8 +104,76 @@ async function init() {
   }
   tabTitleEl.textContent = activeTab.title || activeTab.url || 'Untitled tab';
 
+  const allTabs = await chrome.tabs.query({ currentWindow: true });
+  const webTabs = allTabs.filter(
+    (t) => t.url && /^https?:\/\//i.test(t.url) && !t.url.startsWith(TUCK_WEB_URL)
+  );
+  rescueAllBtnEl.textContent = `Rescue all open tabs (${webTabs.length})`;
+  if (webTabs.length === 0) rescueAllBtnEl.disabled = true;
+
   await loadRecent();
 }
+
+rescueAllBtnEl.addEventListener('click', async () => {
+  rescueAllBtnEl.disabled = true;
+  tuckBtnEl.disabled = true;
+  statusMsgEl.textContent = 'Rescuing all open tabs...';
+
+  const allTabs = await chrome.tabs.query({ currentWindow: true });
+  const webTabs = allTabs.filter(
+    (t) => t.url && /^https?:\/\//i.test(t.url) && !t.url.startsWith(TUCK_WEB_URL)
+  );
+
+  if (webTabs.length === 0) {
+    statusMsgEl.textContent = 'No open web tabs to rescue.';
+    rescueAllBtnEl.disabled = false;
+    tuckBtnEl.disabled = false;
+    return;
+  }
+
+  const batchPayload = webTabs.slice(0, 8).map((t) => ({
+    title: t.title || 'Saved tab',
+    url: t.url || '',
+    rawContent: `${t.title || ''} - ${t.url || ''}`,
+    isPrivate: Boolean(privateToggleEl.checked),
+  }));
+
+  const data = await chrome.storage.local.get(STORAGE_KEY);
+  const existing = Array.isArray(data[STORAGE_KEY]) ? data[STORAGE_KEY] : [];
+  const savedBatch = batchPayload.map((b, idx) => ({
+    id: `ext-batch-${Date.now()}-${idx}`,
+    title: b.title,
+    url: b.url,
+    rawContent: b.rawContent,
+    summary: `Rescued in batch from Chrome (${b.title}).`,
+    nextAction: 'Review this rescued tab in Tuck.',
+    tags: extractTags(b.rawContent),
+    isPrivate: b.isPrivate,
+    source: 'chrome-tab',
+    status: 'tucked',
+    inferenceSource: 'Batch Rescue · On-Device',
+    createdAt: Date.now(),
+  }));
+
+  await chrome.storage.local.set({
+    [STORAGE_KEY]: [...savedBatch, ...existing].slice(0, 40),
+  });
+
+  const encoded = encodeURIComponent(JSON.stringify(batchPayload));
+  await chrome.tabs.create({ url: `${TUCK_WEB_URL}/#tuck-batch=${encoded}` });
+
+  if (closeTabToggleEl.checked) {
+    const idsToClose = webTabs.map((t) => t.id).filter(Boolean);
+    if (idsToClose.length > 0) {
+      try {
+        await chrome.tabs.remove(idsToClose);
+      } catch {
+        // Ignore already closed tabs
+      }
+    }
+  }
+  window.close();
+});
 
 tuckBtnEl.addEventListener('click', async () => {
   if (!activeTab) return;

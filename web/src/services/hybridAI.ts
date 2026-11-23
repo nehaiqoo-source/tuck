@@ -4,7 +4,9 @@ import {
   InferenceSource,
 } from 'firebase/ai';
 import { ai } from './firebase';
+import { redactForCloud, restoreRedactions } from './privacyShield';
 import type {
+  AskShelfResult,
   HybridMode,
   InferenceMeta,
   SynthesisResult,
@@ -243,6 +245,20 @@ export async function synthesizeItemsInCloud(
 ): Promise<SynthesisResult> {
   const startedAt = performance.now();
 
+  // Two-stage Hybrid AI: Stage 1 runs locally to mask PII before any Cloud call
+  const rawItemsBlock = items
+    .map(
+      (item, idx) =>
+        `${idx + 1}. [${item.source}] ${item.title}\nSummary: ${item.summary}\nNext action: ${item.nextAction}\nURL: ${item.url || 'none'}`
+    )
+    .join('\n\n');
+
+  const shield = redactForCloud(rawItemsBlock);
+  const shieldMeta =
+    shield.redactedCount > 0
+      ? { redactedCount: shield.redactedCount, categories: shield.categories }
+      : undefined;
+
   if (!ai) {
     const tags = Array.from(new Set(items.flatMap((i) => i.tags))).slice(0, 3);
     return {
@@ -257,12 +273,13 @@ export async function synthesizeItemsInCloud(
         latencyMs: Math.max(18, Math.round(performance.now() - startedAt)),
         modeUsed: 'only_in_cloud',
       },
+      privacyShield: shieldMeta,
       createdAt: Date.now(),
     };
   }
 
   const prompt = `You are Tuck's cloud synthesis engine.
-The user selected ${items.length} separate saved tabs, screenshots, and notes. Combine them into one clear, actionable plan.
+The user selected ${items.length} separate saved tabs, screenshots, and notes. Combine them into one clear, actionable plan. Keep any bracketed placeholders like [AMOUNT_1] or [CLINIC_OR_PERSON_1] intact if you reference them.
 Return ONLY valid JSON:
 {
   "title": "short clear plan title",
@@ -271,12 +288,7 @@ Return ONLY valid JSON:
 }
 
 Items:
-${items
-  .map(
-    (item, idx) =>
-      `${idx + 1}. [${item.source}] ${item.title}\nSummary: ${item.summary}\nNext action: ${item.nextAction}\nURL: ${item.url || 'none'}`
-  )
-  .join('\n\n')}`;
+${shield.sanitizedText}`;
 
   try {
     const model = getGenerativeModel(
@@ -303,14 +315,26 @@ ${items
       steps?: string[];
     }>(text);
 
+    // Stage 2: Restore masked PII locally on the user's screen
+    const restoredTitle = restoreRedactions(
+      parsed?.title?.trim() || `Plan from ${items.length} tucked items`,
+      shield.replacements
+    );
+    const restoredOverview = restoreRedactions(
+      parsed?.overview?.trim() || text.slice(0, 260),
+      shield.replacements
+    );
+    const restoredSteps = (
+      Array.isArray(parsed?.steps) && parsed.steps.length > 0
+        ? parsed.steps
+        : items.map((i) => i.nextAction)
+    ).map((s) => restoreRedactions(s, shield.replacements));
+
     return {
       id: `syn-${Date.now()}`,
-      title: parsed?.title?.trim() || `Plan from ${items.length} tucked items`,
-      overview: parsed?.overview?.trim() || text.slice(0, 260),
-      steps:
-        Array.isArray(parsed?.steps) && parsed.steps.length > 0
-          ? parsed.steps
-          : items.map((i) => i.nextAction),
+      title: restoredTitle,
+      overview: restoredOverview,
+      steps: restoredSteps,
       itemIds: items.map((i) => i.id),
       inferenceMeta: {
         source: 'cloud',
@@ -318,6 +342,7 @@ ${items
         latencyMs,
         modeUsed: 'only_in_cloud',
       },
+      privacyShield: shieldMeta,
       createdAt: Date.now(),
     };
   } catch (error) {
@@ -337,7 +362,146 @@ ${items
         modeUsed: 'only_in_cloud',
         note: message,
       },
+      privacyShield: shieldMeta,
       createdAt: Date.now(),
+    };
+  }
+}
+
+export async function askYourShelf(
+  question: string,
+  items: TuckItem[],
+  requestedMode: HybridMode = 'prefer_on_device'
+): Promise<AskShelfResult> {
+  const startedAt = performance.now();
+  const activeItems = items.filter((i) => i.status !== 'let-go');
+  const qWords = question
+    .toLowerCase()
+    .split(/\W+/)
+    .filter((w) => w.length > 2);
+
+  // Rank top matching items locally so context stays focused and fast
+  const scored = activeItems
+    .map((item) => {
+      const hay =
+        `${item.title} ${item.summary} ${item.rawContent} ${item.tags.join(' ')}`.toLowerCase();
+      const score = qWords.reduce(
+        (acc, w) => (hay.includes(w) ? acc + 1 : acc),
+        0
+      );
+      return { item, score };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const topItems = scored
+    .slice(0, Math.min(5, activeItems.length))
+    .map((s) => s.item);
+
+  const rawContext = topItems
+    .map(
+      (it) =>
+        `[${it.id}] ${it.title} (${it.source})\nSummary: ${it.summary}\nDetails: ${it.rawContent}\nNext: ${it.nextAction}`
+    )
+    .join('\n\n');
+
+  const shield = redactForCloud(rawContext);
+  const shieldMeta =
+    shield.redactedCount > 0
+      ? { redactedCount: shield.redactedCount, categories: shield.categories }
+      : undefined;
+
+  if (!ai) {
+    const best = topItems[0];
+    return {
+      question,
+      answer: best
+        ? `${best.summary} Next step: ${best.nextAction}`
+        : 'No matching saves found on your shelf yet.',
+      citedItemIds: best ? [best.id] : [],
+      inferenceMeta: {
+        source: 'local-preview',
+        model: 'Local memory match',
+        latencyMs: Math.max(10, Math.round(performance.now() - startedAt)),
+        modeUsed: requestedMode,
+      },
+      privacyShield: shieldMeta,
+    };
+  }
+
+  const prompt = `You are Tuck, answering a user's question using ONLY their saved items below.
+Keep bracketed placeholders like [AMOUNT_1] or [CLINIC_OR_PERSON_1] intact if used.
+Return ONLY valid JSON:
+{
+  "answer": "1-3 plain sentences directly answering the question",
+  "citedItemIds": ["exact item id(s) used from brackets"]
+}
+
+Question: ${question}
+
+Saved items:
+${shield.sanitizedText}`;
+
+  try {
+    const model = getGenerativeModel(
+      ai,
+      {
+        mode: toSdkMode(requestedMode),
+        inCloudParams: {
+          model: CLOUD_MODEL,
+          generationConfig: {
+            responseMimeType: 'application/json',
+            maxOutputTokens: 350,
+          },
+        },
+      },
+      { timeout: 25000 }
+    );
+
+    const result = await model.generateContent(prompt);
+    const latencyMs = Math.round(performance.now() - startedAt);
+    const ranOnDevice =
+      result.response.inferenceSource === InferenceSource.ON_DEVICE;
+    const parsed = safeParseJson<{ answer?: string; citedItemIds?: string[] }>(
+      result.response.text()
+    );
+
+    const rawAnswer =
+      parsed?.answer?.trim() || result.response.text().slice(0, 260);
+    const restoredAnswer = restoreRedactions(rawAnswer, shield.replacements);
+    const cited = Array.isArray(parsed?.citedItemIds)
+      ? parsed.citedItemIds.filter((id) => topItems.some((i) => i.id === id))
+      : topItems.slice(0, 1).map((i) => i.id);
+
+    return {
+      question,
+      answer: restoredAnswer,
+      citedItemIds: cited,
+      inferenceMeta: {
+        source: ranOnDevice ? 'on-device' : 'cloud',
+        model: ranOnDevice
+          ? 'Gemini Nano (Chrome On-Device)'
+          : `${CLOUD_MODEL} (Cloud Fallback)`,
+        latencyMs,
+        modeUsed: requestedMode,
+      },
+      privacyShield: ranOnDevice ? undefined : shieldMeta,
+    };
+  } catch (error) {
+    const best = topItems[0];
+    return {
+      question,
+      answer: best
+        ? `${best.summary} Next step: ${best.nextAction}`
+        : 'Could not reach AI right now and no local match was found.',
+      citedItemIds: best ? [best.id] : [],
+      inferenceMeta: {
+        source: 'local-preview',
+        model: 'Offline local search fallback',
+        latencyMs: Math.round(performance.now() - startedAt),
+        modeUsed: requestedMode,
+        note: error instanceof Error ? error.message : 'Unavailable',
+      },
+      privacyShield: shieldMeta,
     };
   }
 }

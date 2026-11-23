@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Cloud, ExternalLink, Lock, Trash2 } from 'lucide-react';
+import { Cloud, ExternalLink, LayoutGrid, Lock, Network, Trash2 } from 'lucide-react';
 import type { TuckItem } from '../types';
 import { InferenceBadge } from './InferenceBadge';
+import { ConnectionMap } from './ConnectionMap';
 
 interface QuietShelfProps {
   items: TuckItem[];
@@ -10,6 +11,7 @@ interface QuietShelfProps {
   onToggleSelect: (id: string) => void;
   onClearSelection: () => void;
   onSynthesize: () => void;
+  onSynthesizeCluster: (clusterItems: TuckItem[]) => void;
   onDelete: (id: string) => void;
 }
 
@@ -20,10 +22,12 @@ export function QuietShelf({
   onToggleSelect,
   onClearSelection,
   onSynthesize,
+  onSynthesizeCluster,
   onDelete,
 }: QuietShelfProps) {
   const [search, setSearch] = useState('');
   const [activeTag, setActiveTag] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   const allTags = useMemo(() => {
     const set = new Set<string>();
@@ -48,13 +52,45 @@ export function QuietShelf({
   return (
     <section aria-labelledby="shelf-heading">
       <div className="section-header">
-        <h2 id="shelf-heading" className="section-title">
-          Your quiet shelf
-        </h2>
-        <span className="section-meta">
-          Select 2+ items to connect them into a plan with Cloud Gemini
-        </span>
+        <div>
+          <h2 id="shelf-heading" className="section-title">
+            Your quiet shelf
+          </h2>
+          <span className="section-meta">
+            Select 2+ items to connect them into a plan with Cloud Gemini
+          </span>
+        </div>
+
+        <div className="view-toggle" role="group" aria-label="Shelf view mode">
+          <button
+            type="button"
+            className={`filter-pill ${viewMode === 'list' ? 'active' : ''}`}
+            onClick={() => setViewMode('list')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
+          >
+            <LayoutGrid size={13} />
+            Shelf
+          </button>
+          <button
+            type="button"
+            className={`filter-pill ${viewMode === 'map' ? 'active' : ''}`}
+            onClick={() => setViewMode('map')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
+          >
+            <Network size={13} />
+            Connection Map
+          </button>
+        </div>
       </div>
+
+      {viewMode === 'map' ? (
+        <ConnectionMap
+          items={items}
+          synthesizing={synthesizing}
+          onSynthesizeCluster={onSynthesizeCluster}
+        />
+      ) : (
+        <>
 
       <div className="shelf-toolbar">
         <input
@@ -194,6 +230,8 @@ export function QuietShelf({
           );
         })}
       </div>
+        </>
+      )}
     </section>
   );
 }

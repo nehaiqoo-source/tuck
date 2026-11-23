@@ -37,6 +37,11 @@ export interface TuckItem {
   updatedAt: number;
 }
 
+export interface ShieldMeta {
+  redactedCount: number;
+  categories: string[];
+}
+
 export interface SynthesisResult {
   id: string;
   title: string;
@@ -44,5 +49,14 @@ export interface SynthesisResult {
   steps: string[];
   itemIds: string[];
   inferenceMeta: InferenceMeta;
+  privacyShield?: ShieldMeta;
   createdAt: number;
+}
+
+export interface AskShelfResult {
+  question: string;
+  answer: string;
+  citedItemIds: string[];
+  inferenceMeta: InferenceMeta;
+  privacyShield?: ShieldMeta;
 }

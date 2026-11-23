@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import {
   BookmarkCheck,
+  CalendarPlus,
   Check,
   ExternalLink,
   Lock,
+  Mail,
   Smartphone,
   Globe,
   Image as ImageIcon,
@@ -10,6 +13,10 @@ import {
   Trash2,
 } from 'lucide-react';
 import type { TuckItem, TuckSource } from '../types';
+import {
+  downloadIcsFile,
+  extractItemActions,
+} from '../services/actionExtractor';
 import { InferenceBadge } from './InferenceBadge';
 
 interface DailyTriageDeckProps {
@@ -52,6 +59,9 @@ export function DailyTriageDeck({
   onLetGo,
 }: DailyTriageDeckProps) {
   const current = deckItems[0];
+  const [checkedSteps, setCheckedSteps] = useState<Record<string, boolean>>({});
+  const [copiedEmailId, setCopiedEmailId] = useState<string | null>(null);
+  const actions = current ? extractItemActions(current) : null;
 
   return (
     <section aria-labelledby="daily-deck-heading">
@@ -112,6 +122,76 @@ export function DailyTriageDeck({
           <div className="next-action-box">
             <div className="next-action-label">Suggested next step</div>
             <div className="next-action-text">{current.nextAction}</div>
+
+            {actions && (actions.calendar || actions.email) && (
+              <div className="action-chips">
+                {actions.calendar && (
+                  <button
+                    type="button"
+                    className="action-chip"
+                    onClick={() =>
+                      downloadIcsFile(current.title, actions.calendar!.icsContent)
+                    }
+                  >
+                    <CalendarPlus size={13} />
+                    {actions.calendar.label} (.ics)
+                  </button>
+                )}
+                {actions.email && (
+                  <button
+                    type="button"
+                    className="action-chip"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(
+                          `${actions.email!.subject}\n\n${actions.email!.body}`
+                        );
+                        setCopiedEmailId(current.id);
+                        setTimeout(() => setCopiedEmailId(null), 2000);
+                      } catch {
+                        window.location.href = actions.email!.mailtoUrl;
+                      }
+                    }}
+                  >
+                    <Mail size={13} />
+                    {copiedEmailId === current.id
+                      ? 'Email draft copied'
+                      : actions.email.label}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {actions && actions.checklist.length > 0 && (
+              <div className="mini-checklist">
+                {actions.checklist.map((step, idx) => {
+                  const key = `${current.id}-${idx}`;
+                  return (
+                    <label key={key} className="mini-check-item">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(checkedSteps[key])}
+                        onChange={(e) =>
+                          setCheckedSteps((prev) => ({
+                            ...prev,
+                            [key]: e.target.checked,
+                          }))
+                        }
+                      />
+                      <span
+                        style={{
+                          textDecoration: checkedSteps[key]
+                            ? 'line-through'
+                            : 'none',
+                        }}
+                      >
+                        {step}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="tag-row">
