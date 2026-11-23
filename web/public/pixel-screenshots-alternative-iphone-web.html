@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Free Pixel Screenshots &amp; MyMind Alternative for iPhone, Android, and Web | Tuck</title>
+    <meta
+      name="description"
+      content="Want Pixel Screenshots on iPhone, any Android phone, or desktop Chrome? Tuck is a free open-source alternative that organizes screenshots privately on-device."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://tucktabs.app/pixel-screenshots-alternative-iphone-web.html" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://tucktabs.app/pixel-screenshots-alternative-iphone-web.html" />
+    <meta property="og:title" content="Free Pixel Screenshots &amp; MyMind Alternative for iPhone, Android, and Web" />
+    <meta property="og:description" content="Private on-device screenshot triage and search across Web, Chrome, Android, and iOS." />
+    <meta property="og:image" content="https://tucktabs.app/og-image.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is there a Pixel Screenshots alternative for iPhone and Web?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Tuck works on Web, Chrome, Android, and iOS. It uses on-device AI (Gemini Nano on Chrome and Android, Apple Foundation Models on iOS) to summarize and tag screenshots locally without locking you to Pixel hardware."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does Tuck compare to MyMind as a free alternative?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Tuck is free and open source under Apache 2.0, keeps private screenshots off cloud servers by default, and surfaces three older items a day so saved screenshots actually get acted on."
+            }
+          }
+        ]
+      }
+    </script>
+    <style>
+      :root { --bg:#faf8f4; --surface:#fff; --border:#e6dfd4; --ink:#1c1917; --muted:#57524b; --accent:#c25934; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; line-height:1.72; }
+      .wrap { max-width:740px; margin:0 auto; padding:40px 20px 80px; }
+      header { display:flex; justify-content:space-between; align-items:center; padding-bottom:20px; border-bottom:1px solid var(--border); margin-bottom:36px; }
+      .brand { font-family:Georgia,serif; font-size:28px; color:var(--ink); text-decoration:none; }
+      .cta { background:var(--accent); color:#fff; text-decoration:none; padding:9px 16px; border-radius:999px; font-size:14px; font-weight:600; }
+      h1 { font-family:Georgia,serif; font-weight:400; font-size:42px; line-height:1.15; margin:0 0 18px; }
+      h2 { font-family:Georgia,serif; font-weight:400; font-size:28px; margin:34px 0 12px; }
+      p { margin:0 0 18px; color:var(--muted); font-size:17px; }
+      .box { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px 24px; margin:28px 0; }
+      a { color:var(--accent); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="/">Tuck</a>
+        <div style="display:flex;gap:14px;align-items:center;">
+          <a href="/blog/" style="text-decoration:none;color:#645e56;font-size:14px;">All guides</a>
+          <a class="cta" href="/">Open Tuck Free</a>
+        </div>
+      </header>
+
+      <article>
+        <h1>A free Pixel Screenshots and MyMind alternative for iPhone, Android, and Web</h1>
+        <p>
+          Google's Pixel Screenshots app proved how useful on-device AI is for making messy screenshots searchable. The limitation is obvious: it only runs on newer Pixel phones. On the other side, visual bookmarking tools like MyMind work across devices, but require a paid subscription and upload your captures to remote servers.
+        </p>
+
+        <h2>Built for every device you actually use</h2>
+        <p>
+          Tuck brings private screenshot triage to Web, Chrome, Android, and iOS in one free, open-source project. On Chrome and supported Android phones, Firebase AI Logic runs Gemini Nano locally. On iOS, it targets Apple Foundation Models. On devices without a local model, it falls back automatically to Cloud Gemini so nothing breaks.
+        </p>
+
+        <h2>Privacy enforced at the database layer</h2>
+        <p>
+          When you toggle "Private (keep on-device)" on a dentist receipt, lab report, or chat screenshot, Tuck strips the raw image before syncing to Firestore, and Firestore Security Rules reject any write that tries to attach image data to a private item.
+        </p>
+
+        <div class="box">
+          <p style="margin-bottom:12px;color:#1c1917;font-weight:600;">Drop a screenshot and test it right now</p>
+          <p style="margin-bottom:16px;">
+            Open Tuck in your browser, attach a screenshot or click "Try private receipt," and inspect the live Hybrid AI log.
+          </p>
+          <a class="cta" href="/">Try Tuck Free</a>
+        </div>
+
+        <p style="font-size:14px;">
+          Related: <a href="/organize-phone-screenshots-privately.html">Organize phone screenshots privately</a> · <a href="/on-device-ai-vs-cloud-ai-privacy.html">On-device AI vs cloud AI</a>
+        </p>
+      </article>
+    </div>
+  </body>
+</html>
