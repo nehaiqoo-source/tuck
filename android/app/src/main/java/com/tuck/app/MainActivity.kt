@@ -116,7 +116,11 @@ private fun TuckAndroidScreen(
     var isPrivate by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var synthesizing by remember { mutableStateOf(false) }
-    var synthesisPlan by remember { mutableStateOf<String?>(null) }
+    var synthesisResult by remember { mutableStateOf<HybridTuckEngine.ShieldedAnswer?>(null) }
+    var askQuery by remember { mutableStateOf("") }
+    var asking by remember { mutableStateOf(false) }
+    var askAnswer by remember { mutableStateOf<HybridTuckEngine.ShieldedAnswer?>(null) }
+    var shelfTab by remember { mutableStateOf("read-later") }
     var selectedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     var items by remember {
@@ -193,7 +197,24 @@ private fun TuckAndroidScreen(
     }
 
     val currentCard = items.firstOrNull { it.status == "tucked" }
-    val shelfItems = items.filter { it.status != "let-go" }
+    val readLaterItems = items.filter { it.status == "tucked" }
+    val bookmarkItems = items.filter { it.status == "kept" || it.status == "done" }
+    val shelfItems = if (shelfTab == "bookmarks") bookmarkItems else readLaterItems
+
+    // Duplicate detection (by normalized URL or title)
+    val duplicateIds = remember(items) {
+        val seen = mutableSetOf<String>()
+        val dups = mutableListOf<String>()
+        for (it in items.filter { it.status != "let-go" }) {
+            val key = if (!it.url.isNullOrBlank()) {
+                "url:${it.url.trim().trimEnd('/').lowercase()}"
+            } else {
+                "txt:${it.title.trim().lowercase().take(50)}"
+            }
+            if (!seen.add(key)) dups.add(it.id)
+        }
+        dups
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -446,50 +467,167 @@ private fun TuckAndroidScreen(
                 }
             }
 
-            // Quiet Shelf header + Cloud Synthesis CTA
+            // Ask Your Shelf (Hybrid Q&A + Local Privacy Shield)
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Surface(
+                    color = CardWhite,
+                    shape = RoundedCornerShape(18.dp),
+                    tonalElevation = 1.dp,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "Your quiet shelf (${shelfItems.size})",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = InkBlack
-                    )
-                    if (selectedIds.size >= 2 || shelfItems.size >= 2) {
-                        Surface(
-                            color = CloudSoft,
-                            shape = RoundedCornerShape(999.dp)
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "Ask your shelf",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = InkBlack
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TextButton(
+                            OutlinedTextField(
+                                value = askQuery,
+                                onValueChange = { askQuery = it },
+                                placeholder = { Text("Ask about any saved receipt or tab...") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Button(
                                 onClick = {
+                                    val q = askQuery.trim()
+                                    if (q.isBlank()) return@Button
                                     scope.launch {
-                                        synthesizing = true
-                                        val chosen = if (selectedIds.size >= 2) {
-                                            shelfItems.filter { it.id in selectedIds }
-                                        } else {
-                                            shelfItems.take(3)
-                                        }
-                                        synthesisPlan = try {
-                                            engine.synthesizeInCloud(chosen)
+                                        asking = true
+                                        askAnswer = try {
+                                            engine.askYourShelf(q, items)
                                         } catch (_: Exception) {
-                                            "Could not reach Cloud Gemini right now. Check connection and try again."
+                                            HybridTuckEngine.ShieldedAnswer(
+                                                "Offline or AI unavailable. Check your shelf below.",
+                                                0
+                                            )
                                         }
-                                        synthesizing = false
+                                        asking = false
                                     }
                                 },
-                                enabled = !synthesizing,
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
+                                enabled = !asking && askQuery.isNotBlank(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Terracotta),
+                                shape = RoundedCornerShape(999.dp)
                             ) {
-                                Text(
-                                    text = if (synthesizing) "Synthesizing..." else "Connect in Cloud",
-                                    color = CloudBlue,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                Text(if (asking) "..." else "Ask")
+                            }
+                        }
+                        askAnswer?.let { res ->
+                            Surface(
+                                color = WarmPaper,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    if (res.redactedCount > 0) {
+                                        Text(
+                                            text = "Privacy Shield: ${res.redactedCount} detail(s) masked locally before Cloud call",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = SageGreen
+                                        )
+                                    }
+                                    Text(res.text, fontSize = 14.sp, color = InkBlack)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Quiet Shelf header: Read Later vs Bookmarks tabs + Clean Duplicates + Cloud Synthesis
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = shelfTab == "read-later",
+                                onClick = { shelfTab = "read-later" },
+                                label = { Text("Read Later (${readLaterItems.size})") }
+                            )
+                            FilterChip(
+                                selected = shelfTab == "bookmarks",
+                                onClick = { shelfTab = "bookmarks" },
+                                label = { Text("Bookmarks (${bookmarkItems.size})") }
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (duplicateIds.isNotEmpty()) {
+                            OutlinedButton(
+                                onClick = {
+                                    val dupSet = duplicateIds.toSet()
+                                    items = items.filterNot { it.id in dupSet }
+                                    currentUser?.uid?.let { uid ->
+                                        duplicateIds.forEach { id ->
+                                            db.collection("users").document(uid)
+                                                .collection("items").document(id).delete()
+                                        }
+                                    }
+                                },
+                                shape = RoundedCornerShape(999.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Text("Clean ${duplicateIds.size} duplicate(s)", fontSize = 12.sp)
+                            }
+                        }
+
+                        if (selectedIds.size >= 2 || shelfItems.size >= 2) {
+                            Surface(
+                                color = CloudSoft,
+                                shape = RoundedCornerShape(999.dp)
+                            ) {
+                                TextButton(
+                                    onClick = {
+                                        scope.launch {
+                                            synthesizing = true
+                                            val chosen = if (selectedIds.size >= 2) {
+                                                items.filter { it.id in selectedIds }
+                                            } else {
+                                                shelfItems.take(3)
+                                            }
+                                            synthesisResult = try {
+                                                engine.synthesizeInCloud(chosen)
+                                            } catch (_: Exception) {
+                                                HybridTuckEngine.ShieldedAnswer(
+                                                    "Could not reach Cloud Gemini right now. Check connection and try again.",
+                                                    0
+                                                )
+                                            }
+                                            synthesizing = false
+                                        }
+                                    },
+                                    enabled = !synthesizing,
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = if (synthesizing) "Synthesizing..." else "Connect in Cloud",
+                                        color = CloudBlue,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                             }
                         }
                     }
@@ -543,14 +681,27 @@ private fun TuckAndroidScreen(
         }
     }
 
-    // Cloud Synthesis Dialog
-    if (synthesisPlan != null) {
+    // Cloud Synthesis Dialog with Local Privacy Shield indicator
+    if (synthesisResult != null) {
+        val res = synthesisResult!!
         AlertDialog(
-            onDismissRequest = { synthesisPlan = null },
+            onDismissRequest = { synthesisResult = null },
             title = { Text("Cloud Gemini plan") },
-            text = { Text(synthesisPlan.orEmpty()) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (res.redactedCount > 0) {
+                        Text(
+                            text = "Privacy Shield: ${res.redactedCount} detail(s) masked locally before Cloud call",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = SageGreen
+                        )
+                    }
+                    Text(res.text)
+                }
+            },
             confirmButton = {
-                TextButton(onClick = { synthesisPlan = null }) {
+                TextButton(onClick = { synthesisResult = null }) {
                     Text("Done")
                 }
             }

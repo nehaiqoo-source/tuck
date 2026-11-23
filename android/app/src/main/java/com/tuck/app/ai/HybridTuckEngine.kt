@@ -130,14 +130,49 @@ class HybridTuckEngine {
         }
     }
 
-    suspend fun synthesizeInCloud(items: List<TuckItem>): String {
-        val prompt = buildString {
-            appendLine("Combine these saved items into a concise 4-step action plan:")
+    data class ShieldedAnswer(
+        val text: String,
+        val redactedCount: Int
+    )
+
+    suspend fun synthesizeInCloud(items: List<TuckItem>): ShieldedAnswer {
+        val rawBlock = buildString {
             items.forEachIndexed { index, item ->
                 appendLine("${index + 1}. ${item.title}: ${item.summary} (Next: ${item.nextAction})")
             }
         }
+        val shield = PrivacyShield.redact(rawBlock)
+        val prompt = """
+            Combine these saved items into a concise 4-step action plan.
+            Keep any bracketed placeholders like [AMOUNT_1] or [CLINIC_OR_PERSON_1] intact if referenced.
+            ${shield.sanitizedText}
+        """.trimIndent()
         val response = cloudSynthesisModel.generateContent(prompt)
-        return response.text ?: "Could not synthesize items."
+        val restored = PrivacyShield.restore(
+            response.text ?: "Could not synthesize items.",
+            shield.replacements
+        )
+        return ShieldedAnswer(restored, shield.redactedCount)
+    }
+
+    suspend fun askYourShelf(question: String, items: List<TuckItem>): ShieldedAnswer {
+        val active = items.filter { it.status != "let-go" }.take(6)
+        val rawContext = active.joinToString("\n\n") { item ->
+            "${item.title}: ${item.summary} (Details: ${item.rawContent}, Next: ${item.nextAction})"
+        }
+        val shield = PrivacyShield.redact(rawContext)
+        val prompt = """
+            Answer the user's question in 1-2 plain sentences using ONLY their saved items below.
+            Keep any bracketed placeholders like [AMOUNT_1] intact if referenced.
+            Question: $question
+            Saved items:
+            ${shield.sanitizedText}
+        """.trimIndent()
+        val response = hybridModel.generateContent(prompt)
+        val restored = PrivacyShield.restore(
+            response.text ?: "No matching saved item found.",
+            shield.replacements
+        )
+        return ShieldedAnswer(restored, shield.redactedCount)
     }
 }
