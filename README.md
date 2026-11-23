@@ -10,12 +10,12 @@ Built for the #BuildHybridAI 2026 Firebase Hybrid AI Hackathon.
 
 Screenshots and open tabs often contain private details like medical receipts, personal chats, or bank notes. Tuck runs Firebase AI Logic in `PREFER_ON_DEVICE` mode first so private captures are summarized and tagged locally on the device, even offline:
 
-- Web (Chrome): `firebase/ai` using `InferenceMode.PREFER_ON_DEVICE` (Gemini Nano in Chrome) with automatic fallback to `gemini-3.8-flash`.
+- Web (Chrome): `firebase/ai` using `InferenceMode.PREFER_ON_DEVICE` (Gemini Nano in Chrome) with automatic fallback to `gemini-3.5-flash-lite`.
 - Android (Kotlin and Jetpack Compose): `firebase-ai` + `firebase-ai-ondevice` with `InferenceMode.PREFER_ON_DEVICE` (Gemini Nano via Android AICore) and Android Share Sheet support for links and screenshots.
 - iOS (SwiftUI): Firebase iOS SDK (`FirebaseAI`) targeting Apple Foundation Models on-device with Cloud Gemini fallback.
 - Chrome Extension (Manifest V3): One-click "Tuck this tab" popup and right-click menu that closes tab clutter and hands off to Tuck Web.
 
-When you select two or more saved items on your shelf to combine into a single plan (for example, turning saved Kyoto tabs and screenshots into a weekend itinerary), Tuck explicitly calls `InferenceMode.ONLY_IN_CLOUD` (`gemini-3.8-flash`) for multi-item synthesis.
+When you select two or more saved items on your shelf to combine into a single plan (for example, turning saved Kyoto tabs and screenshots into a weekend itinerary), Tuck explicitly calls `InferenceMode.ONLY_IN_CLOUD` (`gemini-3.5-flash-lite`) for multi-item synthesis.
 
 ## Repository layout
 
