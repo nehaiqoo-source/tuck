@@ -15,14 +15,14 @@ if (keystorePropsFile.exists()) {
 
 android {
     namespace = "com.tuck.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "app.tucktabs.android"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 5
-        versionName = "0.4.1"
+        targetSdk = 36
+        versionCode = 6
+        versionName = "0.4.2"
     }
 
     signingConfigs {
