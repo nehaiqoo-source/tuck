@@ -21,8 +21,8 @@ android {
         applicationId = "app.tucktabs.android"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.4.2"
+        versionCode = 7
+        versionName = "0.4.3"
     }
 
     signingConfigs {
@@ -38,7 +38,12 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             if (keystorePropsFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }

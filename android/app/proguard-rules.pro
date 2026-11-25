@@ -1,0 +1,3 @@
+-keep class com.tuck.app.model.** { *; }
+-keepattributes Signature,InnerClasses,EnclosingMethod,*Annotation*
+-dontwarn com.google.firebase.**

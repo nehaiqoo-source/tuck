@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -48,6 +49,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         handleIncomingShare(intent)
 
         setContent {
@@ -126,42 +128,7 @@ private fun TuckAndroidScreen(
     var shelfTab by remember { mutableStateOf("read-later") }
     var selectedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
 
-    var items by remember {
-        mutableStateOf(
-            listOf(
-                TuckItem(
-                    id = "and-seed-1",
-                    title = "Dentist receipt: Dr. Mehta Clinic",
-                    rawContent = "OPD reimbursement due Dec 15",
-                    source = "screenshot",
-                    summary = "Dental clinic receipt for ₹3,400 with Dec 15 reimbursement deadline.",
-                    nextAction = "Upload receipt to HR portal before Dec 15.",
-                    tags = listOf("receipt", "private"),
-                    isPrivate = true,
-                    inferenceMeta = InferenceMeta(
-                        source = "on-device",
-                        model = "Gemini Nano (Android AICore)",
-                        latencyMs = 154L
-                    )
-                ),
-                TuckItem(
-                    id = "and-seed-2",
-                    title = "Kyoto backstreet ramen spots",
-                    rawContent = "Menya Inoichi Hanare opens at 11am, get a ticket at 10:15am.",
-                    source = "chrome-tab",
-                    summary = "Recommended Kyoto ramen spot with a 10:15am queue ticket tip.",
-                    nextAction = "Pin Menya Inoichi Hanare on Kyoto map.",
-                    tags = listOf("travel", "kyoto"),
-                    isPrivate = false,
-                    inferenceMeta = InferenceMeta(
-                        source = "on-device",
-                        model = "Gemini Nano (Chrome)",
-                        latencyMs = 138L
-                    )
-                )
-            )
-        )
-    }
+    var items by remember { mutableStateOf<List<TuckItem>>(emptyList()) }
 
     // Listen to Firebase Auth state
     DisposableEffect(Unit) {
@@ -180,8 +147,8 @@ private fun TuckAndroidScreen(
                 .document(uid)
                 .collection("items")
                 .addSnapshotListener { snap, _ ->
-                    val remote = snap?.documents?.mapNotNull { it.toObject(TuckItem::class.java) }
-                    if (!remote.isNullOrEmpty()) {
+                    if (snap != null) {
+                        val remote = snap.documents.mapNotNull { it.toObject(TuckItem::class.java) }
                         items = remote.sortedByDescending { it.createdAt }
                     }
                 }
@@ -224,7 +191,9 @@ private fun TuckAndroidScreen(
         color = WarmPaper
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing),
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -388,11 +357,27 @@ private fun TuckAndroidScreen(
                         shape = RoundedCornerShape(18.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "Desk is clear for today. Share any link or screenshot to Tuck.",
-                            color = MutedStone,
-                            modifier = Modifier.padding(24.dp)
-                        )
+                        Column(
+                            modifier = Modifier.padding(24.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text(
+                                text = if (items.isEmpty()) {
+                                    "Your shelf is clean. Paste a link above or share from any Android app to start."
+                                } else {
+                                    "Desk is clear for today. Share any link or screenshot to Tuck."
+                                },
+                                color = MutedStone
+                            )
+                            if (items.isEmpty()) {
+                                TextButton(
+                                    onClick = { items = sampleDemoItems() },
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text("Load sample demo items", color = Terracotta, fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                        }
                     }
                 } else {
                     Surface(
@@ -806,3 +791,36 @@ private fun TuckAndroidScreen(
         )
     }
 }
+
+private fun sampleDemoItems(): List<TuckItem> = listOf(
+    TuckItem(
+        id = "and-seed-1",
+        title = "Dentist receipt: Dr. Mehta Clinic",
+        rawContent = "OPD reimbursement due Dec 15",
+        source = "screenshot",
+        summary = "Dental clinic receipt for ₹3,400 with Dec 15 reimbursement deadline.",
+        nextAction = "Upload receipt to HR portal before Dec 15.",
+        tags = listOf("receipt", "private"),
+        isPrivate = true,
+        inferenceMeta = InferenceMeta(
+            source = "on-device",
+            model = "Gemini Nano (Android AICore)",
+            latencyMs = 154L
+        )
+    ),
+    TuckItem(
+        id = "and-seed-2",
+        title = "Kyoto backstreet ramen spots",
+        rawContent = "Menya Inoichi Hanare opens at 11am, get a ticket at 10:15am.",
+        source = "chrome-tab",
+        summary = "Recommended Kyoto ramen spot with a 10:15am queue ticket tip.",
+        nextAction = "Pin Menya Inoichi Hanare on Kyoto map.",
+        tags = listOf("travel", "kyoto"),
+        isPrivate = false,
+        inferenceMeta = InferenceMeta(
+            source = "on-device",
+            model = "Gemini Nano (Chrome)",
+            latencyMs = 138L
+        )
+    )
+)

@@ -14,17 +14,18 @@ import type { TuckItem, TuckStatus } from '../types';
 
 const LOCAL_STORAGE_KEY = 'tuck_items_v1';
 
+export { SEED_ITEMS };
+
 export function loadLocalItems(): TuckItem[] {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(SEED_ITEMS));
-      return SEED_ITEMS;
+      return [];
     }
     const parsed = JSON.parse(raw) as TuckItem[];
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : SEED_ITEMS;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return SEED_ITEMS;
+    return [];
   }
 }
 

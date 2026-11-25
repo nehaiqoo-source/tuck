@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { Activity, LogIn, LogOut, Wifi, WifiOff } from 'lucide-react';
+import { Activity, ExternalLink, LogIn, LogOut, Wifi, WifiOff } from 'lucide-react';
 import {
   auth,
   isFirebaseConfigured,
@@ -12,6 +12,7 @@ import {
   synthesizeItemsInCloud,
 } from './services/hybridAI';
 import {
+  SEED_ITEMS,
   loadLocalItems,
   persistItem,
   removeItem,
@@ -76,12 +77,19 @@ export function App() {
   useEffect(() => {
     if (!user) return;
     return subscribeUserItems(user.uid, (remoteItems) => {
-      if (remoteItems.length > 0) {
-        setItems(remoteItems);
-        saveLocalItems(remoteItems);
-      }
+      setItems(remoteItems);
+      saveLocalItems(remoteItems);
     });
   }, [user]);
+
+  const handleLoadSamples = () => {
+    syncLocal(() => SEED_ITEMS);
+    if (user) {
+      for (const sample of SEED_ITEMS) {
+        void persistItem(user.uid, sample).catch(() => {});
+      }
+    }
+  };
 
   const syncLocal = (updater: (prev: TuckItem[]) => TuckItem[]) => {
     setItems((prev) => {
@@ -373,6 +381,17 @@ export function App() {
             </select>
           </label>
 
+          <a
+            href="https://chromewebstore.google.com/detail/tuck-read-it-later-actual/mjmekpiibndmcecdchamahmhfmijgjlh"
+            target="_blank"
+            rel="noreferrer"
+            className="btn"
+            style={{ textDecoration: 'none' }}
+          >
+            <ExternalLink size={14} />
+            Chrome Extension
+          </a>
+
           {isFirebaseConfigured &&
             (user ? (
               <button
@@ -424,6 +443,36 @@ export function App() {
       </div>
 
       <QuickTuckComposer busy={busyTuck} onTuck={handleTuck} />
+
+      {items.length === 0 && (
+        <div
+          className="stats-strip"
+          style={{
+            justifyContent: 'space-between',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 16px',
+            marginTop: 14,
+          }}
+        >
+          <span>
+            Your shelf is clean and empty. Tuck a link above or install the{' '}
+            <a
+              href="https://chromewebstore.google.com/detail/tuck-read-it-later-actual/mjmekpiibndmcecdchamahmhfmijgjlh"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: 'var(--accent)', fontWeight: 600 }}
+            >
+              Chrome Extension
+            </a>{' '}
+            to start.
+          </span>
+          <button type="button" className="filter-pill" onClick={handleLoadSamples}>
+            Load sample demo items
+          </button>
+        </div>
+      )}
 
       <main className="main-grid">
         <DailyTriageDeck
@@ -499,6 +548,14 @@ export function App() {
           </a>
           <a href="/privacy.html" style={{ color: 'inherit' }}>
             Privacy
+          </a>
+          <a
+            href="https://chromewebstore.google.com/detail/tuck-read-it-later-actual/mjmekpiibndmcecdchamahmhfmijgjlh"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: 'inherit' }}
+          >
+            Chrome Extension
           </a>
           <a
             href="https://github.com/nehaiqoo-source/tuck"
