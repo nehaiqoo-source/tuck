@@ -558,6 +558,14 @@ export function App() {
             Chrome Extension
           </a>
           <a
+            href="https://play.google.com/apps/testing/app.tucktabs.android"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: 'inherit' }}
+          >
+            Android (Beta)
+          </a>
+          <a
             href="https://github.com/nehaiqoo-source/tuck"
             target="_blank"
             rel="noreferrer"

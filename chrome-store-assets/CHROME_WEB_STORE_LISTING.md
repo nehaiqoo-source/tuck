@@ -1,7 +1,8 @@
 # Tuck: Chrome Web Store Submission Kit
 
-## Package to Upload
-- `releases/tuck-chrome-extension-v0.2.0.zip` (`manifest.json` at root, icons 16/32/48/128 included)
+## Package & Live Listing
+- Package uploaded: `releases/tuck-chrome-extension-v0.3.1.zip` (`manifest.json` at root, visual pocket icons 16/32/48/128 included)
+- Live Chrome Web Store URL: https://chromewebstore.google.com/detail/tuck-read-it-later-actual/mjmekpiibndmcecdchamahmhfmijgjlh
 
 ## Store Listing
 - **Title:** Tuck: Read it later, actually.
@@ -31,7 +32,8 @@ What Tuck does:
 - **Remote code:** No.
 
 ## Graphic Assets in This Folder
-- `screenshot-1-extension-1280x800.png` (1280 x 800 — Screenshot 1)
-- `screenshot-2-daily-triage-1280x800.png` (1280 x 800 — Screenshot 2)
-- `small-promo-440x280.png` (440 x 280 — Small Promo Tile)
-- `marquee-promo-1400x560.png` (1400 x 560 — Marquee Promo Tile)
+- `store-icon-128x128.png` (128 x 128, Store Icon)
+- `screenshot-1-extension-1280x800.png` (1280 x 800, Screenshot 1)
+- `screenshot-2-daily-triage-1280x800.png` (1280 x 800, Screenshot 2)
+- `small-promo-440x280.png` (440 x 280, Small Promo Tile)
+- `marquee-promo-1400x560.png` (1400 x 560, Marquee Promo Tile)
